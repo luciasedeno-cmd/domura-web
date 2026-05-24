@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Domura - Carrito</title>
+
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,700&f[]=boska@300,400,500,700,400i&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+
+  <style>
+    /* ==========================================================================
+       DISEÑO EDITORIAL Y MINIMALISTA (CHECKOUT)
+       ========================================================================== */
+    body {
+      background-color: #000;
+      color: #fff;
+    }
+
+    .checkout-page {
+      padding-top: 160px;
+      padding-bottom: 120px;
+      min-height: 100vh;
+      font-family: 'Satoshi', sans-serif;
+    }
+
+    .checkout-container {
+      max-width: 1160px; /* Reducción de márgenes y ancho general para mayor esbeltez */
+      margin: 0 auto;
+      padding: 0 4%;
+    }
+
+    /* --- INDICADORES DE PASO (DISEÑO LIMPIO) --- */
+    .checkout-steps {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 20px;
+      margin-bottom: 50px;
+    }
+
+    .step-item {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: rgba(255, 255, 255, 0.35);
+      font-weight: 400;
+      transition: color 0.4s ease;
+      position: relative;
+    }
+
+    .step-item.active {
+      color: #fff;
+    }
+
+    /* --- VISTAS DE CONTENIDO (SPA) --- */
+    .step-content {
+      display: none;
+      opacity: 0;
+      transform: translateY(15px);
+      transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .step-content.active {
+      display: block;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* --- COMPONENTES TIPOGRÁFICOS --- */
+    .section-title {
+      font-family: 'Boska', serif;
+      font-size: 1.6rem;
+      font-weight: 300;
+      letter-spacing: 0.5px;
+      margin-bottom: 35px;
+      text-align: center;
+    }
+
+    .section-title.left {
+      text-align: left;
+      font-size: 1.1rem;
+      text-transform: uppercase;
+      font-family: 'Satoshi', sans-serif;
+      letter-spacing: 2px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .fine-divider {
+      width: 100%;
+      height: 1px;
+      background-color: rgba(255, 255, 255, 0.08);
+      margin: 35px 0;
+    }
+
+    /* --- FILAS Y TARJETAS DEL CARRITO --- */
+    .cart-item-row {
+      display: flex;
+      align-items: center;
+      padding: 20px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .cart-img {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      filter: grayscale(15%);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .cart-details {
+      flex: 1;
+      padding-left: 24px;
+    }
+
+    .cart-item-title {
+      font-family: 'Boska', serif;
+      font-size: 1.35rem;
+      font-weight: 400;
+      margin-bottom: 4px;
+    }
+
+    .cart-item-subtitle {
+      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.4);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .cart-meta {
+      display: flex;
+      align-items: center;
+      gap: 50px;
+    }
+
+    .cart-qty {
+      font-size: 0.95rem;
+      color: rgba(255, 255, 255, 0.8);
+      font-weight: 300;
+    }
+
+    .cart-price {
+      font-size: 1.15rem;
+      font-weight: 400;
+      letter-spacing: 0.5px;
+    }
+
+    /* --- DESGLOSE DE PRECIOS --- */
+    .summary-block {
+      margin-top: 10px;
+    }
+
+    .summary-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      font-size: 0.9rem;
+      font-weight: 300;
+      color: rgba(255, 255, 255, 0.5);
+      letter-spacing: 0.5px;
+    }
+
+    .summary-line.total {
+      font-size: 1.2rem;
+      color: #fff;
+      font-weight: 400;
+      margin-top: 20px;
+    }
+
+    /* --- FORMULARIOS LINEALES ULTRA-ELEGANTES --- */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 35px 25px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .form-group.full-width {
+      grid-column: 1 / -1;
+    }
+
+    .form-label {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: rgba(255, 255, 255, 0.4);
+      font-weight: 500;
+    }
+
+    .form-input {
+      width: 100%;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 10px 0;
+      color: #fff;
+      font-family: 'Satoshi', sans-serif;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.45s ease;
+      border-radius: 0;
+    }
+
+    .form-input:focus {
+      border-bottom-color: #fff;
+    }
+
+    .form-input.error-field {
+      border-bottom-color: #c9284e; /* Alerta visual integrada sutil */
+    }
+
+    .form-input::placeholder {
+      color: rgba(255, 255, 255, 0.15);
+    }
+
+    /* --- BOTONES DE ACCIÓN --- */
+    .btn-checkout {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 54px;
+      border-radius: 40px;
+      background-color: #fff;
+      color: #000;
+      font-family: 'Satoshi', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 500;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      border: 1px solid transparent;
+      cursor: none;
+      transition: background-color 0.4s, border-color 0.4s, color 0.4s;
+      margin-top: 30px;
+    }
+
+    .btn-checkout:hover {
+      background-color: transparent !important;
+      border-color: #fff !important;
+      color: #fff !important;
+    }
+
+    /* --- PANTALLA EXCLUSIVA DE CONFIRMACIÓN --- */
+    .success-panel {
+      text-align: center;
+      padding: 40px 0;
+    }
+
+    .success-ring-icon {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 35px;
+    }
+
+    .success-ring-icon svg {
+      width: 32px;
+      height: 32px;
+      color: #fff;
+    }
+
+    .success-title {
+      font-family: 'Boska', serif;
+      font-size: 2.5rem;
+      font-weight: 300;
+      margin-bottom: 15px;
+      letter-spacing: 1px;
+    }
+
+    .success-subtitle {
+      font-size: 0.95rem;
+      font-weight: 300;
+      color: rgba(255, 255, 255, 0.5);
+      margin-bottom: 45px;
+    }
+
+    .success-details {
+      font-size: 0.95rem;
+      font-weight: 300;
+      line-height: 1.8;
+      color: rgba(255, 255, 255, 0.8);
+      max-width: 440px;
+      margin: 0 auto;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding-top: 30px;
+    }
+
+    .success-details strong {
+      font-weight: 500;
+      color: #fff;
+    }
+
+    /* --- ADAPTACIÓN RESPONSIVE DE MÁRGENES --- */
+    @media (max-width: 768px) {
+      .checkout-page {
+        padding-top: 120px;
+      }
+      .checkout-steps {
+        font-size: 0.7rem;
+        gap: 15px;
+      }
+      .cart-item-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 20px;
+      }
+      .cart-details {
+        padding-left: 0;
+      }
+      .cart-meta {
+        width: 100%;
+        justify-content: space-between;
+      }
+      .form-grid {
+        grid-template-columns: 1fr;
+        gap: 25px;
+      }
+      .success-title {
+        font-size: 2rem;
+      }
+    }
+  </style>
+</head>
+<body class="loading">
+
+<div class="page-transition"></div>
+
+<div class="cursor-dot"></div>
+<div class="cursor-ring"></div>
+
+<header class="main-header">
+  <div class="header-left">
+    <a href="index.html" class="logo"><img src="assets/logoblanco.png" alt="Logo Domura"></a>
+  </div>
+  <div class="header-right">
+    <nav class="nav-menu">
+      <a href="experiencias.html" class="nav-link" data-text="Experiencias"><span>Experiencias</span></a>
+      <a href="firma.html" class="nav-link" data-text="Firma"><span>Firma</span></a>
+    </nav>
+    <button class="menu-toggle" aria-label="Abrir menú"><span></span><span></span><span></span></button>
+    <div class="header-icons">
+      <a href="perfil.html" class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg></a>
+      <a href="carrito.html" class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007z"/></svg></a>
+    </div>
+  </div>
+</header>
+
+<main class="checkout-page">
+  <div class="checkout-container">
+
+    <nav class="checkout-steps" aria-label="Progreso del pedido">
+      <div class="step-item active" id="step-label-1">01. Carrito</div>
+      <div class="step-item" id="step-label-2">02. Datos</div>
+      <div class="step-item" id="step-label-3">03. Pago</div>
+      <div class="step-item" id="step-label-4">04. Confirmación</div>
+    </nav>
+
+    <form id="checkout-form" onsubmit="event.preventDefault();">
+
+      <div class="step-content active" id="step-1">
+        <h2 class="section-title">Tu experiencia</h2>
+
+        <div class="cart-item-row">
+          <img src="assets/fotos/exp/exp_0000s_0003_signature1.jpg" alt="Signature Experience" class="cart-img">
+          <div class="cart-details">
+            <h3 class="cart-item-title">Signature Experience</h3>
+            <p class="cart-item-subtitle">5 Personas</p>
+          </div>
+          <div class="cart-meta">
+            <div class="cart-qty">1</div>
+            <div class="cart-price">425€</div>
+          </div>
+        </div>
+
+        <div class="fine-divider"></div>
+        <h2 class="section-title left">Resumen del pedido</h2>
+
+        <div class="summary-block">
+          <div class="summary-line">
+            <span>Subtotal</span>
+            <span>425€</span>
+          </div>
+          <div class="summary-line">
+            <span>Envío</span>
+            <span>Gratis</span>
+          </div>
+          <div class="fine-divider"></div>
+          <div class="summary-line total">
+            <span>Total</span>
+            <span>425€</span>
+          </div>
+        </div>
+
+        <button type="button" class="btn-checkout" onclick="navigateNext(2)">Siguiente</button>
+      </div>
+
+      <div class="step-content" id="step-2">
+        <h2 class="section-title">Detalles de envío</h2>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="nombre">Nombre Completo</label>
+            <input type="text" id="nombre" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="telefono">Teléfono</label>
+            <input type="tel" id="telefono" class="form-input" required>
+          </div>
+          <div class="form-group full-width">
+            <label class="form-label" for="email">Email</label>
+            <input type="email" id="email" class="form-input" required>
+          </div>
+        </div>
+
+        <div class="fine-divider"></div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="direccion">Dirección de Envío</label>
+            <input type="text" id="direccion" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="ciudad">Ciudad</label>
+            <input type="text" id="ciudad" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="cp">Código Postal</label>
+            <input type="text" id="cp" class="form-input" required>
+          </div>
+        </div>
+
+        <div class="fine-divider"></div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="fecha">Fecha de Envío</label>
+            <input type="date" id="fecha" class="form-input" required>
+          </div>
+        </div>
+
+        <button type="button" class="btn-checkout" onclick="navigateNext(3)">Continuar al pago</button>
+      </div>
+
+      <div class="step-content" id="step-3">
+        <h2 class="section-title">Método de pago</h2>
+
+        <div class="form-grid">
+          <div class="form-group full-width">
+            <label class="form-label" for="titular">Nombre del Titular</label>
+            <input type="text" id="titular" class="form-input" required>
+          </div>
+          <div class="form-group full-width">
+            <label class="form-label" for="tarjeta">Número de la Tarjeta</label>
+            <input type="text" id="tarjeta" class="form-input" placeholder="XXXX XXXX XXXX XXXX" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="caducidad">Fecha de Caducidad</label>
+            <input type="text" id="caducidad" class="form-input" placeholder="XX/XXXX" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="cvv">CVV ⓘ</label>
+            <input type="text" id="cvv" class="form-input" placeholder="XXX" required>
+          </div>
+        </div>
+
+        <div class="fine-divider"></div>
+
+        <div class="summary-block">
+          <div class="summary-line">
+            <span>Subtotal</span>
+            <span>425€</span>
+          </div>
+          <div class="summary-line">
+            <span>Envío</span>
+            <span>Gratis</span>
+          </div>
+          <div class="fine-divider"></div>
+          <div class="summary-line total">
+            <span>Total</span>
+            <span>425€</span>
+          </div>
+        </div>
+
+        <button type="button" class="btn-checkout" onclick="navigateNext(4)">Pagar y finalizar</button>
+      </div>
+
+      <div class="step-content" id="step-4">
+        <div class="success-panel">
+          <div class="success-ring-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </div>
+          <h2 class="success-title">Perfecto</h2>
+          <p class="success-subtitle">El pago se ha realizado correctamente.</p>
+
+          <div class="success-details">
+            Signature Experience para 5 personas el<br>
+            día <strong>04/06/2026</strong> a las <strong>21:00h</strong>.
+          </div>
+        </div>
+      </div>
+
+    </form>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-left"><h2 class="footer-logo"><img src="assets/logoblanco.png" alt="Logo Domura"></h2></div>
+    <div class="footer-links">
+      <div class="footer-col"><h4>Síguenos</h4><a href="#">Instagram</a><a href="#">Facebook</a></div>
+      <div class="footer-col"><h4>Experiencias</h4><a href="essential.html">Essential</a><a href="curated.html">Curated</a><a href="signature.html">Signature</a><a href="limited.html">Limited</a></div>
+      <div class="footer-col"><h4>Información</h4><a href="firma.html">Firma</a><a href="faq.html">FAQ</a><a href="envio.html">Envío</a><a href="contacto.html">Contacto</a></div>
+      <div class="footer-col"><h4>Legal</h4><a href="aviso-legal.html">Aviso legal</a><a href="privacidad.html">Privacidad</a><a href="terminos.html">Términos</a></div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const bodyEl = document.body;
+    const isFinePointer = matchMedia('(pointer: fine)').matches;
+
+    // --- Transición de entrada (Corregida e Integrada de Forma Nv) ---
+    const transitionScreen = document.querySelector('.page-transition');
+    if (transitionScreen) {
+      setTimeout(() => {
+        transitionScreen.classList.add('hidden');
+        bodyEl.classList.remove('loading');
+        bodyEl.classList.add('loaded');
+        setTimeout(() => { transitionScreen.style.display = 'none'; }, 600);
+      }, 400);
+    }
+
+    // --- Lógica del Cursor Premium ---
+    const dot = document.querySelector('.cursor-dot');
+    const ring = document.querySelector('.cursor-ring');
+
+    if (isFinePointer && (dot || ring)) {
+      let mouseX = 0, mouseY = 0, ringX = 0, ringY = 0;
+
+      document.addEventListener('mousemove', (e) => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+        if (dot) {
+          dot.style.left = `${mouseX}px`;
+          dot.style.top = `${mouseY}px`;
+        }
+      });
+
+      (function loopRing() {
+        ringX += (mouseX - ringX) * 0.15;
+        ringY += (mouseY - ringY) * 0.15;
+        if (ring) {
+          ring.style.left = `${ringX}px`;
+          ring.style.top = `${ringY}px`;
+        }
+        requestAnimationFrame(loopRing);
+      })();
+
+      // Vincular interactividad con botones
+      document.body.addEventListener('mouseenter', (e) => {
+        if (e.target.matches?.('a, button, input, .step-item')) {
+          bodyEl.classList.add('hover-active');
+        }
+      }, true);
+
+      document.body.addEventListener('mouseleave', (e) => {
+        if (e.target.matches?.('a, button, input, .step-item')) {
+          bodyEl.classList.remove('hover-active');
+        }
+      }, true);
+    } else {
+      if (dot) dot.style.display = 'none';
+      if (ring) ring.style.display = 'none';
+    }
+
+    // --- Menú Hamburguesa Móvil ---
+    const menuToggle = document.querySelector('.menu-toggle');
+    const navMenu = document.querySelector('.nav-menu');
+    if (menuToggle && navMenu) {
+      menuToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = bodyEl.classList.toggle('menu-open');
+        menuToggle.classList.toggle('active', isOpen);
+      });
+    }
+  });
+
+  // ==========================================================================
+  // MOTOR DEL CUESTIONARIO / CHECKOUT CON VALIDACIÓN OBLIGATORIA ESTRICTA
+  // ==========================================================================
+  function navigateNext(targetStep) {
+    const currentStepContent = document.querySelector('.step-content.active');
+
+    // Si avanzamos, validamos los campos obligatorios del paso actual
+    if (currentStepContent) {
+      const inputsToValidate = currentStepContent.querySelectorAll('input[required]');
+      let formIsValid = true;
+
+      inputsToValidate.forEach(input => {
+        if (!input.value.trim()) {
+          formIsValid = false;
+          input.classList.add('error-field');
+
+          // Limpiar el estado de error cuando el usuario vuelva a escribir
+          input.addEventListener('input', function checkTransient() {
+            if (this.value.trim()) {
+              this.classList.remove('error-field');
+              input.removeEventListener('input', checkTransient);
+            }
+          });
+        } else {
+          input.classList.remove('error-field');
+        }
+      });
+
+      if (!formIsValid) {
+        // Detener la ejecución si hay campos vacíos obligatorios
+        return;
+      }
+    }
+
+    // Realizar el cambio de pantalla fluido SPA
+    const allContents = document.querySelectorAll('.step-content');
+    allContents.forEach(content => content.classList.remove('active'));
+
+    const allLabels = document.querySelectorAll('.step-item');
+    allLabels.forEach(label => {
+      const stepIdx = parseInt(label.id.replace('step-label-', ''));
+      if (stepIdx <= targetStep) {
+        label.classList.add('active');
+      } else {
+        label.classList.remove('active');
+      }
+    });
+
+    setTimeout(() => {
+      const activeTarget = document.getElementById(`step-${targetStep}`);
+      if (activeTarget) {
+        activeTarget.classList.add('active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }, 40);
+  }
+</script>
+</body>
+</html>

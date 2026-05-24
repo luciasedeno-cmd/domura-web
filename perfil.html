@@ -1,0 +1,1404 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Domura — Mi Perfil</title>
+  <link rel="preconnect" href="https://api.fontshare.com">
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,700&f[]=boska@300,400,500,700,400i&display=swap" rel="stylesheet">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <style>
+    /* ===========================
+       RESET & BASE
+    =========================== */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; background-color: #000; }
+    body {
+      font-family: 'Satoshi', sans-serif;
+      background-color: #000;
+      color: #fff;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+    @media (pointer: fine) { body, a, button { cursor: none !important; } }
+
+    /* ===========================
+       CUSTOM CURSOR
+    =========================== */
+    .cursor-dot, .cursor-ring {
+      position: fixed; top: 0; left: 0;
+      border-radius: 50%; pointer-events: none;
+      transition: width .3s, height .3s, background .3s, border-color .3s;
+      z-index: 99999;
+    }
+    .cursor-dot { width: 5px; height: 5px; background: #fff; transform: translate(-50%,-50%); }
+    .cursor-ring { width: 36px; height: 36px; border: 1px solid rgba(255,255,255,.4); transform: translate(-50%,-50%); z-index: 99998; }
+    body.hover-active .cursor-ring { width: 55px; height: 55px; background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.8); }
+
+    /* ===========================
+       PAGE LOADER
+    =========================== */
+    .page-transition {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: #000000; /* Negro puro */
+      z-index: 9999; /* Asegura que esté por encima de todo */
+      opacity: 1;
+      pointer-events: none; /* Evita que el usuario haga clic en elementos fantasmas durante la transición */
+      transition: opacity 0.6s ease-in-out; /* Duración del desvanecimiento (0.6 segundos) */
+    }
+
+    /* Esta clase se activará con JavaScript cuando la página termine de cargar */
+    .page-transition.hidden {
+      opacity: 0;
+    }
+
+    /* ===========================
+       HEADER
+    =========================== */
+    .main-header {
+      position: fixed; top: 0; left: 0; width: 100%;
+      padding: 35px 6%;
+      display: flex; justify-content: space-between; align-items: center;
+      z-index: 1000;
+      background: linear-gradient(to bottom, rgba(0,0,0,.6), transparent);
+      backdrop-filter: blur(1px);
+    }
+    .logo img {
+      height: 30px;     /* Ajusta este número (en píxeles) para cambiar el tamaño vertical de tu logo */
+      width: auto;      /* Hace que el ancho se calcule automáticamente para no deformar la imagen */
+      display: block;   /* Elimina espacios vacíos no deseados debajo de la imagen */
+    }    .header-right { display: flex; align-items: center; gap: 50px; }
+    .nav-menu { display: flex; gap: 35px; }
+    .nav-link {
+      position: relative; display: inline-block; overflow: hidden;
+      font-size: .75rem; text-transform: uppercase; letter-spacing: 2px;
+      color: rgba(255,255,255,.8); text-decoration: none; font-weight: 500;
+    }
+    .nav-link span { display: inline-block; transition: transform .4s cubic-bezier(.16,1,.3,1); }
+    .nav-link::after { content: attr(data-text); position: absolute; top: 100%; left: 0; width: 100%; color: #fff; transition: transform .4s cubic-bezier(.16,1,.3,1); }
+    .nav-link:hover span, .nav-link:hover::after { transform: translateY(-100%); }
+    .nav-link.active { color: #fff; }
+    .header-icons { display: flex; align-items: center; gap: 22px; }
+    .icon-btn { color: #fff; width: 20px; height: 20px; text-decoration: none; }
+
+    .menu-toggle {
+      display: none; background: none; border: none;
+      width: 30px; height: 20px; position: relative; z-index: 1001;
+      flex-direction: column; justify-content: space-between;
+    }
+    .menu-toggle span { display: block; width: 100%; height: 1.5px; background: #fff; transition: transform .4s cubic-bezier(.16,1,.3,1), opacity .3s; }
+    .menu-toggle.active span:nth-child(1) { transform: translateY(8px) rotate(45deg); }
+    .menu-toggle.active span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+    .menu-toggle.active span:nth-child(3) { transform: translateY(-8px) rotate(-45deg); }
+
+    @media (max-width: 768px) {
+      .menu-toggle { display: flex; }
+      .nav-menu {
+        position: fixed; inset: 0;
+        background: #050505;
+        flex-direction: column; justify-content: center; align-items: center;
+        gap: 2.5rem; z-index: 1000;
+        opacity: 0; visibility: hidden; pointer-events: none;
+        transition: opacity .4s cubic-bezier(.16,1,.3,1), visibility .4s;
+      }
+      body.menu-open .nav-menu { opacity: 1; visibility: visible; pointer-events: auto; }
+      .nav-link { font-size: 1.8rem; }
+      body.menu-open { overflow: hidden; }
+    }
+
+    /* ===========================
+       PROFILE HERO
+    =========================== */
+    .profile-hero {
+      padding: 160px 6% 80px;
+      background: #000;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+      position: relative;
+      overflow: hidden;
+    }
+    .profile-hero::before {
+      content: '';
+      position: absolute; top: 0; right: 0;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(255,255,255,.03) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .profile-hero-inner {
+      max-width: 1300px; margin: 0 auto;
+      display: flex; align-items: center; gap: 50px;
+    }
+    .profile-avatar {
+      width: 110px; height: 110px; border-radius: 50%;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.12);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; position: relative; overflow: hidden;
+    }
+    .profile-avatar svg { width: 44px; height: 44px; color: rgba(255,255,255,.3); }
+    .profile-avatar-badge {
+      position: absolute; bottom: 6px; right: 6px;
+      width: 24px; height: 24px; border-radius: 50%;
+      background: #fff; border: 2px solid #000;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .profile-avatar-badge svg { width: 11px; height: 11px; color: #000; }
+    .profile-info { flex: 1; }
+    .profile-greeting {
+      font-size: .7rem; text-transform: uppercase; letter-spacing: 4px;
+      color: rgba(255,255,255,.3); margin-bottom: 10px;
+    }
+    .profile-name {
+      font-family: 'Boska', serif; font-size: clamp(2.2rem, 4vw, 3.4rem);
+      font-weight: 300; line-height: 1.1; margin-bottom: 16px;
+    }
+    .profile-meta { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+    .profile-tag {
+      display: inline-flex; align-items: center; gap: 8px;
+      border: 1px solid rgba(255,255,255,.14); border-radius: 30px;
+      padding: 5px 14px; font-size: .68rem; letter-spacing: 2px; text-transform: uppercase;
+      color: rgba(255,255,255,.45);
+    }
+    .profile-tag.club {
+      border-color: rgba(255,255,255,.3); color: rgba(255,255,255,.8);
+      background: rgba(255,255,255,.05);
+    }
+    .profile-tag-dot { width: 5px; height: 5px; border-radius: 50%; background: #fff; animation: blink 2s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
+
+    .profile-stats {
+      display: flex; gap: 50px; margin-left: auto;
+      padding-left: 50px; border-left: 1px solid rgba(255,255,255,.07);
+    }
+    .stat-item { text-align: center; }
+    .stat-num { font-family: 'Boska', serif; font-size: 2.2rem; font-weight: 400; line-height: 1; }
+    .stat-label { font-size: .65rem; text-transform: uppercase; letter-spacing: 2.5px; color: rgba(255,255,255,.35); margin-top: 6px; }
+
+    @media (max-width: 900px) {
+      .profile-hero-inner { flex-direction: column; align-items: flex-start; gap: 30px; }
+      .profile-stats { margin-left: 0; padding-left: 0; border-left: none; border-top: 1px solid rgba(255,255,255,.07); padding-top: 24px; width: 100%; justify-content: space-around; }
+    }
+
+    /* ===========================
+       MAIN LAYOUT
+    =========================== */
+    .profile-body {
+      max-width: 1300px; margin: 0 auto;
+      padding: 60px 6% 120px;
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 60px;
+    }
+    @media (max-width: 1024px) {
+      .profile-body { grid-template-columns: 1fr; }
+    }
+
+    /* ===========================
+       SIDEBAR NAV
+    =========================== */
+    .sidebar { position: sticky; top: 120px; height: fit-content; }
+    .sidebar-nav { display: flex; flex-direction: column; gap: 4px; }
+    .sidebar-link {
+      display: flex; align-items: center; gap: 14px;
+      padding: 12px 18px; border-radius: 14px;
+      font-size: .82rem; text-transform: uppercase; letter-spacing: 1.8px;
+      color: rgba(255,255,255,.38); text-decoration: none;
+      transition: color .3s, background .3s;
+      border: 1px solid transparent;
+    }
+    .sidebar-link svg { width: 16px; height: 16px; flex-shrink: 0; opacity: .6; }
+    .sidebar-link:hover { color: rgba(255,255,255,.7); background: rgba(255,255,255,.04); }
+    .sidebar-link.active {
+      color: #fff; background: rgba(255,255,255,.06);
+      border-color: rgba(255,255,255,.1);
+    }
+    .sidebar-link.active svg { opacity: 1; }
+
+    .sidebar-divider { height: 1px; background: rgba(255,255,255,.06); margin: 16px 0; }
+    .sidebar-logout {
+      display: flex; align-items: center; gap: 14px;
+      padding: 12px 18px; border-radius: 14px;
+      font-size: .82rem; text-transform: uppercase; letter-spacing: 1.8px;
+      color: rgba(255,255,255,.25); background: none; border: none;
+      transition: color .3s; margin-top: 4px;
+    }
+    .sidebar-logout svg { width: 16px; height: 16px; opacity: .5; }
+    .sidebar-logout:hover { color: rgba(255,255,255,.55); }
+
+    @media (max-width: 1024px) {
+      .sidebar { position: static; }
+      .sidebar-nav { flex-direction: row; flex-wrap: wrap; gap: 8px; }
+      .sidebar-link { font-size: .68rem; padding: 10px 14px; }
+      .sidebar-divider, .sidebar-logout { display: none; }
+    }
+
+    /* ===========================
+       SECTIONS GENERAL
+    =========================== */
+    .profile-section { margin-bottom: 70px; }
+    .section-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 30px; }
+    .section-title {
+      font-family: 'Boska', serif; font-size: 1.6rem;
+      font-weight: 300; line-height: 1.2;
+    }
+    .section-link {
+      font-size: .68rem; text-transform: uppercase; letter-spacing: 2.5px;
+      color: rgba(255,255,255,.35); text-decoration: none;
+      transition: color .3s;
+    }
+    .section-link:hover { color: #fff; }
+
+    /* ===========================
+       TRACKING / ENVÍOS
+    =========================== */
+    .tracking-card {
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 20px; padding: 32px;
+      margin-bottom: 16px;
+      transition: border-color .3s;
+    }
+    .tracking-card:hover { border-color: rgba(255,255,255,.16); }
+    .tracking-top {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      margin-bottom: 28px;
+    }
+    .tracking-exp-name {
+      font-family: 'Boska', serif; font-size: 1.15rem; font-weight: 400;
+      margin-bottom: 6px;
+    }
+    .tracking-id { font-size: .68rem; text-transform: uppercase; letter-spacing: 2px; color: rgba(255,255,255,.3); }
+    .tracking-status {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 5px 14px; border-radius: 20px; font-size: .68rem;
+      letter-spacing: 1.5px; text-transform: uppercase;
+      border: 1px solid;
+    }
+    .status-dot { width: 5px; height: 5px; border-radius: 50%; animation: blink 2s infinite; }
+    .status-transit { border-color: rgba(255,200,80,.3); color: rgba(255,200,80,.8); }
+    .status-transit .status-dot { background: rgba(255,200,80,.9); }
+    .status-delivered { border-color: rgba(100,220,130,.3); color: rgba(100,220,130,.8); }
+    .status-delivered .status-dot { background: rgba(100,220,130,.9); animation: none; }
+    .status-preparing { border-color: rgba(180,180,255,.3); color: rgba(180,180,255,.8); }
+    .status-preparing .status-dot { background: rgba(180,180,255,.9); }
+
+    .tracking-steps { display: flex; align-items: center; gap: 0; }
+    .track-step {
+      display: flex; flex-direction: column; align-items: center; flex: 1;
+      position: relative;
+    }
+    .track-step:not(:last-child)::after {
+      content: ''; position: absolute; top: 14px; left: 50%; width: 100%;
+      height: 1px; background: rgba(255,255,255,.1); z-index: 0;
+    }
+    .track-step.done:not(:last-child)::after { background: rgba(255,255,255,.35); }
+    .track-ico {
+      width: 28px; height: 28px; border-radius: 50%;
+      border: 1px solid rgba(255,255,255,.15);
+      background: #000;
+      display: flex; align-items: center; justify-content: center;
+      position: relative; z-index: 1; margin-bottom: 10px;
+    }
+    .track-ico svg { width: 12px; height: 12px; color: rgba(255,255,255,.3); }
+    .track-step.done .track-ico { border-color: rgba(255,255,255,.5); background: rgba(255,255,255,.08); }
+    .track-step.done .track-ico svg { color: #fff; }
+    .track-step.current .track-ico { border-color: rgba(255,200,80,.5); background: rgba(255,200,80,.08); }
+    .track-step.current .track-ico svg { color: rgba(255,200,80,.9); }
+    .track-label { font-size: .6rem; text-transform: uppercase; letter-spacing: 1.5px; color: rgba(255,255,255,.28); text-align: center; }
+    .track-step.done .track-label { color: rgba(255,255,255,.55); }
+    .track-step.current .track-label { color: rgba(255,200,80,.8); }
+
+    .tracking-footer { margin-top: 22px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,.06); display: flex; justify-content: space-between; align-items: center; }
+    .tracking-eta { font-size: .78rem; color: rgba(255,255,255,.4); }
+    .tracking-eta strong { color: rgba(255,255,255,.8); }
+    .btn-track-detail {
+      font-size: .68rem; text-transform: uppercase; letter-spacing: 2px;
+      color: rgba(255,255,255,.4); background: none; border: none;
+      padding: 0; text-decoration: none;
+      transition: color .3s;
+    }
+    .btn-track-detail:hover { color: #fff; }
+
+    /* ===========================
+       CLUB SUBSCRIPTION
+    =========================== */
+    .club-banner {
+      border-radius: 22px; overflow: hidden;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.1);
+      padding: 48px 44px;
+      position: relative;
+    }
+    .club-banner::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at top right, rgba(255,255,255,.05), transparent 60%);
+      pointer-events: none;
+    }
+    .club-banner-current {
+      display: flex; align-items: center; justify-content: space-between; gap: 30px;
+      margin-bottom: 40px; flex-wrap: wrap;
+    }
+    .club-plan-label { font-size: .65rem; text-transform: uppercase; letter-spacing: 3px; color: rgba(255,255,255,.3); margin-bottom: 10px; }
+    .club-plan-name { font-family: 'Boska', serif; font-size: 2rem; font-weight: 400; margin-bottom: 8px; }
+    .club-plan-price { font-size: .9rem; color: rgba(255,255,255,.5); }
+    .club-plan-price strong { color: #fff; font-size: 1.2rem; }
+    .club-renew { font-size: .72rem; color: rgba(255,255,255,.3); margin-top: 6px; }
+
+    .club-perks-mini { display: flex; flex-direction: column; gap: 10px; }
+    .club-perk-row { display: flex; align-items: center; gap: 10px; font-size: .82rem; color: rgba(255,255,255,.6); }
+    .club-perk-row svg { width: 14px; height: 14px; color: rgba(255,255,255,.4); flex-shrink: 0; }
+
+    .club-plans-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 600px) { .club-plans-grid { grid-template-columns: 1fr; } }
+
+    .plan-card {
+      border-radius: 18px; padding: 28px 24px;
+      border: 1px solid rgba(255,255,255,.1);
+      background: rgba(255,255,255,.03);
+      transition: border-color .3s, background .3s;
+      position: relative; overflow: hidden;
+    }
+    .plan-card:hover { border-color: rgba(255,255,255,.2); background: rgba(255,255,255,.06); }
+    .plan-card.featured {
+      border-color: rgba(255,255,255,.25);
+      background: rgba(255,255,255,.06);
+    }
+    .plan-badge {
+      position: absolute; top: 16px; right: 16px;
+      font-size: .58rem; text-transform: uppercase; letter-spacing: 2px;
+      padding: 4px 10px; border-radius: 20px;
+      background: rgba(255,255,255,.1); color: rgba(255,255,255,.6);
+      border: 1px solid rgba(255,255,255,.15);
+    }
+    .plan-period { font-size: .65rem; text-transform: uppercase; letter-spacing: 3px; color: rgba(255,255,255,.35); margin-bottom: 14px; }
+    .plan-price-big { font-family: 'Boska', serif; font-size: 2.6rem; font-weight: 300; line-height: 1; margin-bottom: 4px; }
+    .plan-price-sub { font-size: .72rem; color: rgba(255,255,255,.35); margin-bottom: 22px; }
+    .plan-desc { font-size: .8rem; color: rgba(255,255,255,.45); line-height: 1.55; margin-bottom: 22px; }
+    .btn-plan {
+      display: block; width: 100%;
+      padding: 11px 0; border-radius: 30px;
+      font-size: .78rem; font-weight: 500; letter-spacing: .5px;
+      text-align: center; text-decoration: none;
+      border: 1px solid rgba(255,255,255,.2); color: rgba(255,255,255,.7);
+      background: transparent;
+      transition: background .3s, color .3s, border-color .3s;
+    }
+    .btn-plan:hover, .plan-card.featured .btn-plan {
+      background: #fff; color: #000; border-color: #fff;
+    }
+    .plan-card.featured .btn-plan:hover { background: transparent; color: #fff; border-color: rgba(255,255,255,.5); }
+
+    /* ===========================
+       PEDIDOS RECIENTES
+    =========================== */
+    .orders-table { width: 100%; }
+    .order-row {
+      display: grid;
+      grid-template-columns: 1fr 120px 110px 100px;
+      gap: 20px; align-items: center;
+      padding: 20px 0;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+      transition: border-color .3s;
+    }
+    .order-row:hover { border-color: rgba(255,255,255,.14); }
+    .order-row.header-row {
+      font-size: .62rem; text-transform: uppercase; letter-spacing: 2.5px;
+      color: rgba(255,255,255,.25); padding-bottom: 14px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    .order-exp { display: flex; align-items: center; gap: 16px; }
+    .order-thumb {
+      width: 52px; height: 52px; border-radius: 10px;
+      background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.08);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .order-thumb svg { width: 20px; height: 20px; color: rgba(255,255,255,.2); }
+    .order-name { font-size: .88rem; font-weight: 500; margin-bottom: 4px; }
+    .order-date { font-size: .7rem; color: rgba(255,255,255,.3); }
+    .order-persons { font-size: .82rem; color: rgba(255,255,255,.55); }
+    .order-price { font-size: .92rem; font-weight: 500; }
+    .order-status-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: .62rem; text-transform: uppercase; letter-spacing: 1.5px;
+      padding: 4px 10px; border-radius: 20px; border: 1px solid;
+    }
+    .badge-completed { border-color: rgba(100,220,130,.25); color: rgba(100,220,130,.7); }
+    .badge-pending { border-color: rgba(255,200,80,.25); color: rgba(255,200,80,.7); }
+    .badge-cancelled { border-color: rgba(255,100,100,.2); color: rgba(255,100,100,.6); }
+
+    @media (max-width: 700px) {
+      .order-row { grid-template-columns: 1fr 90px; }
+      .order-persons, .order-row.header-row .col-persons { display: none; }
+    }
+
+    /* ===========================
+       BENEFICIOS CLUB
+    =========================== */
+    .benefits-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    @media (max-width: 700px) { .benefits-grid { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 480px) { .benefits-grid { grid-template-columns: 1fr; } }
+
+    .benefit-card {
+      background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.07);
+      border-radius: 16px; padding: 24px 22px;
+      transition: border-color .3s, background .3s;
+    }
+    .benefit-card:hover { border-color: rgba(255,255,255,.15); background: rgba(255,255,255,.05); }
+    .benefit-ico { width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(255,255,255,.12); display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+    .benefit-ico svg { width: 16px; height: 16px; color: rgba(255,255,255,.6); }
+    .benefit-title { font-size: .82rem; font-weight: 500; margin-bottom: 6px; }
+    .benefit-desc { font-size: .75rem; color: rgba(255,255,255,.38); line-height: 1.5; }
+    .benefit-value { font-family: 'Boska', serif; font-size: 1.4rem; font-weight: 400; margin-top: 14px; color: rgba(255,255,255,.8); }
+
+    /* ===========================
+       CONFIGURACIÓN CUENTA
+    =========================== */
+    .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 600px) { .settings-grid { grid-template-columns: 1fr; } }
+
+    .settings-card {
+      background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.07);
+      border-radius: 16px; padding: 26px 24px;
+      transition: border-color .3s;
+    }
+    .settings-card:hover { border-color: rgba(255,255,255,.14); }
+    .settings-label { font-size: .62rem; text-transform: uppercase; letter-spacing: 2.5px; color: rgba(255,255,255,.28); margin-bottom: 10px; }
+    .settings-value { font-size: .92rem; color: rgba(255,255,255,.8); margin-bottom: 14px; }
+    .btn-settings-edit {
+      font-size: .65rem; text-transform: uppercase; letter-spacing: 2px;
+      color: rgba(255,255,255,.3); background: none; border: none; padding: 0;
+      text-decoration: none; transition: color .3s;
+    }
+    .btn-settings-edit:hover { color: rgba(255,255,255,.7); }
+
+    .notification-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,.05);
+    }
+    .notification-row:last-child { border-bottom: none; }
+    .notification-label { font-size: .82rem; color: rgba(255,255,255,.6); }
+    .toggle {
+      position: relative; width: 38px; height: 20px;
+      background: rgba(255,255,255,.12); border-radius: 20px;
+      border: none; transition: background .3s;
+      flex-shrink: 0;
+    }
+    .toggle::after {
+      content: ''; position: absolute; top: 3px; left: 3px;
+      width: 14px; height: 14px; border-radius: 50%; background: rgba(255,255,255,.5);
+      transition: transform .3s, background .3s;
+    }
+    .toggle.on { background: rgba(255,255,255,.25); }
+    .toggle.on::after { transform: translateX(18px); background: #fff; }
+
+    /* ===========================
+       WISHLIST / FAVORITOS
+    =========================== */
+    .wishlist-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    @media (max-width: 700px) { .wishlist-grid { grid-template-columns: 1fr 1fr; } }
+
+    .wish-card {
+      border-radius: 16px; overflow: hidden;
+      background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07);
+      transition: border-color .3s, transform .4s cubic-bezier(.16,1,.3,1);
+    }
+    .wish-card:hover { border-color: rgba(255,255,255,.18); transform: translateY(-4px); }
+    .wish-img {
+      height: 120px; background: rgba(255,255,255,.04);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .wish-img svg { width: 32px; height: 32px; color: rgba(255,255,255,.12); }
+    .wish-body { padding: 16px; }
+    .wish-tier { font-size: .6rem; text-transform: uppercase; letter-spacing: 2px; color: rgba(255,255,255,.3); margin-bottom: 6px; }
+    .wish-name { font-family: 'Boska', serif; font-size: 1rem; font-weight: 400; margin-bottom: 8px; }
+    .wish-price { font-size: .8rem; color: rgba(255,255,255,.5); }
+
+    /* ===========================
+       FOOTER
+    =========================== */
+    .site-footer { background-color: #050505; padding: 100px 8%; border-top: 1px solid rgba(255,255,255,0.08); }
+    .footer-inner { display: flex; justify-content: space-between; max-width: 1400px; margin: 0 auto; }
+    .footer-links { display: flex; gap: 80px; }
+    .footer-col h4 { font-family: 'Boska', serif; font-style: italic; margin-bottom: 20px; color: rgba(255,255,255,0.9); }
+    .footer-col a { display: block; color: rgba(255,255,255,0.5); text-decoration: none; margin-bottom: 12px; transition: 0.3s; }
+    .footer-col a:hover { color: #fff; transform: translateX(5px); }
+    .footer-logo img {
+      height: 30px;     /* Ajusta este valor en píxeles para hacer el logo del footer más grande o más pequeño */
+      width: auto;      /* Mantiene las proporciones de la imagen para que no se deforme */
+      display: block;   /* Evita espacios en blanco innecesarios debajo de la foto */
+    }
+    .site-footer h4 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #fff;
+      margin-bottom: 20px;
+      font-weight: 500;
+    }
+    /* ===========================
+       CHATBOT FLOTANTE
+    =========================== */
+    .chatbot-toggle {
+      position: fixed; bottom: 32px; right: 32px;
+      width: 56px; height: 56px; border-radius: 50%;
+      background: #fff; border: none;
+      display: flex; align-items: center; justify-content: center;
+      z-index: 9000;
+      box-shadow: 0 8px 32px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.1);
+      transition: transform .4s cubic-bezier(.16,1,.3,1), box-shadow .3s;
+    }
+    .chatbot-toggle:hover { transform: scale(1.08); box-shadow: 0 12px 40px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.2); }
+    .chatbot-toggle svg { width: 22px; height: 22px; color: #000; transition: transform .4s cubic-bezier(.16,1,.3,1), opacity .3s; }
+    .chatbot-toggle .ico-chat { position: absolute; }
+    .chatbot-toggle .ico-close { position: absolute; opacity: 0; transform: rotate(-90deg) scale(.8); }
+    .chatbot-open .chatbot-toggle .ico-chat { opacity: 0; transform: rotate(90deg) scale(.8); }
+    .chatbot-open .chatbot-toggle .ico-close { opacity: 1; transform: rotate(0) scale(1); }
+
+    .chatbot-window {
+      position: fixed; bottom: 104px; right: 32px;
+      width: 360px; max-height: 520px;
+      background: #0a0a0a;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 24px;
+      display: flex; flex-direction: column;
+      z-index: 8999;
+      box-shadow: 0 24px 60px rgba(0,0,0,.7);
+      opacity: 0; pointer-events: none;
+      transform: translateY(20px) scale(.96);
+      transition: opacity .4s cubic-bezier(.16,1,.3,1), transform .4s cubic-bezier(.16,1,.3,1);
+    }
+    .chatbot-open .chatbot-window { opacity: 1; pointer-events: all; transform: translateY(0) scale(1); }
+
+    @media (max-width: 480px) {
+      .chatbot-window { width: calc(100vw - 32px); right: 16px; bottom: 96px; }
+      .chatbot-toggle { bottom: 24px; right: 20px; }
+    }
+
+    .chatbot-header {
+      padding: 20px 22px 16px;
+      border-bottom: 1px solid rgba(255,255,255,.07);
+      display: flex; align-items: center; gap: 14px;
+    }
+    .chatbot-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .chatbot-avatar svg { width: 18px; height: 18px; color: rgba(255,255,255,.7); margin-left: 4px; }
+    .chatbot-name { font-size: .88rem; font-weight: 500; }
+    .chatbot-status { font-size: .68rem; color: rgba(255,255,255,.35); display: flex; align-items: center; gap: 6px; margin-top: 2px; }
+    .chatbot-status-dot { width: 5px; height: 5px; border-radius: 50%; background: rgba(100,220,130,.8); animation: blink 2s infinite; }
+
+    .chatbot-messages {
+      flex: 1; overflow-y: auto; padding: 20px;
+      display: flex; flex-direction: column; gap: 14px;
+      scroll-behavior: smooth;
+    }
+    .chatbot-messages::-webkit-scrollbar { width: 3px; }
+    .chatbot-messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 2px; }
+
+    .msg { max-width: 85%; display: flex; flex-direction: column; gap: 4px; }
+    .msg.bot { align-self: flex-start; }
+    .msg.user { align-self: flex-end; }
+    .msg-bubble {
+      padding: 10px 14px; border-radius: 16px;
+      font-size: .82rem; line-height: 1.5;
+    }
+    .msg.bot .msg-bubble {
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.08);
+      border-bottom-left-radius: 4px; color: rgba(255,255,255,.85);
+    }
+    .msg.user .msg-bubble {
+      background: #fff; color: #000;
+      border-bottom-right-radius: 4px;
+    }
+    .msg-time { font-size: .6rem; color: rgba(255,255,255,.22); padding: 0 4px; }
+    .msg.user .msg-time { text-align: right; }
+
+    .chatbot-suggestions {
+      display: flex; flex-wrap: wrap; gap: 6px;
+      padding: 0 20px 14px;
+    }
+    .suggestion-chip {
+      font-size: .68rem; padding: 6px 12px; border-radius: 20px;
+      border: 1px solid rgba(255,255,255,.12); color: rgba(255,255,255,.55);
+      background: none;
+      transition: border-color .2s, color .2s, background .2s;
+      text-align: left; line-height: 1.3;
+    }
+    .suggestion-chip:hover { border-color: rgba(255,255,255,.3); color: rgba(255,255,255,.85); background: rgba(255,255,255,.05); }
+
+    .chatbot-input-area {
+      padding: 14px 16px;
+      border-top: 1px solid rgba(255,255,255,.07);
+      display: flex; gap: 10px; align-items: center;
+    }
+    .chatbot-input {
+      flex: 1; background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.1); border-radius: 20px;
+      color: #fff; font-family: 'Satoshi', sans-serif; font-size: .82rem;
+      padding: 9px 16px; outline: none;
+      transition: border-color .2s;
+    }
+    .chatbot-input::placeholder { color: rgba(255,255,255,.25); }
+    .chatbot-input:focus { border-color: rgba(255,255,255,.3); }
+    .chatbot-send {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: #fff; border: none; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      transition: transform .2s, background .2s;
+    }
+    .chatbot-send:hover { transform: scale(1.08); }
+    .chatbot-send svg { width: 14px; height: 14px; color: #000; }
+
+    .typing-indicator { display: flex; align-items: center; gap: 5px; padding: 10px 14px; }
+    .typing-dot { width: 5px; height: 5px; border-radius: 50%; background: rgba(255,255,255,.4); animation: typingBounce .9s infinite; }
+    .typing-dot:nth-child(2) { animation-delay: .15s; }
+    .typing-dot:nth-child(3) { animation-delay: .3s; }
+    @keyframes typingBounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-6px)} }
+
+    /* ===========================
+       REVEAL ON SCROLL
+    =========================== */
+    .reveal-on-scroll { opacity: 0; transform: translateY(32px); transition: opacity 1s cubic-bezier(.16,1,.3,1), transform 1s cubic-bezier(.16,1,.3,1); }
+    .reveal-on-scroll.is-visible { opacity: 1; transform: none; }
+  </style>
+</head>
+<body>
+
+<!-- CURSOR -->
+<div class="cursor-dot"></div>
+<div class="cursor-ring"></div>
+
+<!-- LOADER -->
+<div class="page-transition"></div>
+
+<!-- HEADER -->
+<header class="main-header">
+  <div class="header-left">
+    <a href="index.html" class="logo"><img src="assets/logoblanco.png" alt="Logo Domura"></a>
+  </div>
+  <div class="header-right">
+    <nav class="nav-menu">
+      <a href="experiencias.html" class="nav-link" data-text="Experiencias"><span>Experiencias</span></a>
+      <a href="firma.html" class="nav-link" data-text="Firma"><span>Firma</span></a>
+    </nav>
+    <button class="menu-toggle" aria-label="Abrir menú"><span></span><span></span><span></span></button>
+    <div class="header-icons">
+      <a href="perfil.html" class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg></a>
+      <a href="carrito.html" class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007z"/></svg></a>
+    </div>
+  </div>
+</header>
+
+<!-- PROFILE HERO -->
+<section class="profile-hero">
+  <div class="profile-hero-inner">
+    <div class="profile-avatar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0"/></svg>
+    </div>
+    <div class="profile-info">
+      <div class="profile-greeting">Bienvenida de nuevo</div>
+      <h1 class="profile-name">Alejandra García</h1>
+      <div class="profile-meta">
+        <span class="profile-tag club">
+          <span class="profile-tag-dot"></span>
+          Club Domura · Anual
+        </span>
+        <span class="profile-tag">Miembro desde 2023</span>
+      </div>
+    </div>
+    <div class="profile-stats">
+      <div class="stat-item">
+        <div class="stat-num">7</div>
+        <div class="stat-label">Experiencias</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">2</div>
+        <div class="stat-label">En camino</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">3</div>
+        <div class="stat-label">Guardadas</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROFILE BODY -->
+<div class="profile-body">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <nav class="sidebar-nav">
+      <a href="#envios" class="sidebar-link active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12"/></svg>
+        Seguimiento
+      </a>
+      <a href="#club" class="sidebar-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/></svg>
+        Club
+      </a>
+      <a href="#pedidos" class="sidebar-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z"/></svg>
+        Pedidos
+      </a>
+      <a href="#beneficios" class="sidebar-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/></svg>
+        Beneficios
+      </a>
+      <a href="#favoritos" class="sidebar-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/></svg>
+        Favoritos
+      </a>
+      <div class="sidebar-divider"></div>
+      <a href="#ajustes" class="sidebar-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"/><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        Ajustes
+      </a>
+      <button class="sidebar-logout">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/></svg>
+        Cerrar sesión
+      </button>
+    </nav>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main>
+
+    <!-- SEGUIMIENTO DE ENVÍOS -->
+    <section class="profile-section reveal-on-scroll" id="envios">
+      <div class="section-header">
+        <h2 class="section-title">Seguimiento de envíos</h2>
+        <a href="#" class="section-link">Ver historial →</a>
+      </div>
+
+      <!-- Envío 1 -->
+      <div class="tracking-card">
+        <div class="tracking-top">
+          <div>
+            <div class="tracking-exp-name">Signature Experience</div>
+            <div class="tracking-id"># DOM-2024-0471</div>
+          </div>
+          <div class="tracking-status status-transit">
+            <span class="status-dot"></span> En tránsito
+          </div>
+        </div>
+        <div class="tracking-steps">
+          <div class="track-step done">
+            <div class="track-ico">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <div class="track-label">Confirmado</div>
+          </div>
+          <div class="track-step done">
+            <div class="track-ico">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9"/></svg>
+            </div>
+            <div class="track-label">Preparado</div>
+          </div>
+          <div class="track-step current">
+            <div class="track-ico">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25"/></svg>
+            </div>
+            <div class="track-label">En ruta</div>
+          </div>
+          <div class="track-step">
+            <div class="track-ico">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/></svg>
+            </div>
+            <div class="track-label">Entregado</div>
+          </div>
+        </div>
+        <div class="tracking-footer">
+          <div class="tracking-eta">Entrega estimada: <strong>Mañana, 24 mayo · 10:00–14:00</strong></div>
+          <a href="#" class="btn-track-detail">Detalles →</a>
+        </div>
+      </div>
+
+      <!-- Envío 2 -->
+      <div class="tracking-card">
+        <div class="tracking-top">
+          <div>
+            <div class="tracking-exp-name">Curated Experience</div>
+            <div class="tracking-id"># DOM-2024-0468</div>
+          </div>
+          <div class="tracking-status status-preparing">
+            <span class="status-dot"></span> Preparando
+          </div>
+        </div>
+        <div class="tracking-steps">
+          <div class="track-step done">
+            <div class="track-ico">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <div class="track-label">Confirmado</div>
+          </div>
+          <div class="track-step current">
+            <div class="track-ico">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9"/></svg>
+            </div>
+            <div class="track-label">Preparado</div>
+          </div>
+          <div class="track-step">
+            <div class="track-ico">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6"/></svg>
+            </div>
+            <div class="track-label">En ruta</div>
+          </div>
+          <div class="track-step">
+            <div class="track-ico">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75"/></svg>
+            </div>
+            <div class="track-label">Entregado</div>
+          </div>
+        </div>
+        <div class="tracking-footer">
+          <div class="tracking-eta">Entrega estimada: <strong>26 mayo · Tarde</strong></div>
+          <a href="#" class="btn-track-detail">Detalles →</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- CLUB SECTION -->
+    <section class="profile-section reveal-on-scroll" id="club">
+      <div class="section-header">
+        <h2 class="section-title">Club Domura</h2>
+        <a href="#" class="section-link">Gestionar suscripción →</a>
+      </div>
+
+      <div class="club-banner">
+        <div class="club-banner-current">
+          <div>
+            <div class="club-plan-label">Tu plan activo</div>
+            <div class="club-plan-name">Club Anual</div>
+            <div class="club-plan-price"><strong>179€</strong> / año</div>
+            <div class="club-renew">Renovación automática el 15 de enero de 2025</div>
+          </div>
+          <div class="club-perks-mini">
+            <div class="club-perk-row">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              Envío premium gratuito en todos tus pedidos
+            </div>
+            <div class="club-perk-row">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              Acceso anticipado a experiencias Limited
+            </div>
+            <div class="club-perk-row">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              15% de descuento en todas las experiencias
+            </div>
+            <div class="club-perk-row">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              Invitaciones a catas y eventos privados
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-bottom:28px; font-size:.72rem; text-transform:uppercase; letter-spacing:3px; color:rgba(255,255,255,.3);">Cambiar plan</div>
+        <div class="club-plans-grid">
+          <div class="plan-card">
+            <div class="plan-period">Mensual</div>
+            <div class="plan-price-big">17€</div>
+            <div class="plan-price-sub">por mes · sin permanencia</div>
+            <div class="plan-desc">Ideal para descubrir Domura Club con toda la flexibilidad. Cancela cuando quieras.</div>
+            <a href="#" class="btn-plan">Cambiar a mensual</a>
+          </div>
+          <div class="plan-card featured">
+            <div class="plan-badge">Tu plan actual</div>
+            <div class="plan-period">Anual</div>
+            <div class="plan-price-big">179€</div>
+            <div class="plan-price-sub">14,92€/mes · ahorra 25%</div>
+            <div class="plan-desc">El máximo valor. Incluye todos los beneficios premium y prioridad en reservas exclusivas.</div>
+            <a href="#" class="btn-plan">Plan actual</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PEDIDOS RECIENTES -->
+    <section class="profile-section reveal-on-scroll" id="pedidos">
+      <div class="section-header">
+        <h2 class="section-title">Pedidos recientes</h2>
+        <a href="#" class="section-link">Ver todos →</a>
+      </div>
+
+      <div class="orders-table">
+        <div class="order-row header-row">
+          <div>Experiencia</div>
+          <div class="col-persons">Comensales</div>
+          <div>Total</div>
+          <div>Estado</div>
+        </div>
+
+        <div class="order-row">
+          <div class="order-exp">
+            <div class="order-thumb">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/></svg>
+            </div>
+            <div>
+              <div class="order-name">Signature</div>
+              <div class="order-date">19 mayo 2024</div>
+            </div>
+          </div>
+          <div class="order-persons">2 comensales</div>
+          <div class="order-price">165€</div>
+          <div><span class="order-status-badge badge-pending">En camino</span></div>
+        </div>
+
+        <div class="order-row">
+          <div class="order-exp">
+            <div class="order-thumb">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9"/></svg>
+            </div>
+            <div>
+              <div class="order-name">Curated</div>
+              <div class="order-date">18 mayo 2024</div>
+            </div>
+          </div>
+          <div class="order-persons">4 comensales</div>
+          <div class="order-price">90€</div>
+          <div><span class="order-status-badge badge-pending">Preparando</span></div>
+        </div>
+
+        <div class="order-row">
+          <div class="order-exp">
+            <div class="order-thumb">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>
+            </div>
+            <div>
+              <div class="order-name">Limited · Rapunzel Revival</div>
+              <div class="order-date">2 abril 2024</div>
+            </div>
+          </div>
+          <div class="order-persons">5 comensales</div>
+          <div class="order-price">650€</div>
+          <div><span class="order-status-badge badge-completed">Entregado</span></div>
+        </div>
+
+        <div class="order-row">
+          <div class="order-exp">
+            <div class="order-thumb">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0"/></svg>
+            </div>
+            <div>
+              <div class="order-name">Essential</div>
+              <div class="order-date">14 marzo 2024</div>
+            </div>
+          </div>
+          <div class="order-persons">3 comensales</div>
+          <div class="order-price">90€</div>
+          <div><span class="order-status-badge badge-completed">Entregado</span></div>
+        </div>
+
+        <div class="order-row">
+          <div class="order-exp">
+            <div class="order-thumb">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18"/></svg>
+            </div>
+            <div>
+              <div class="order-name">Limited · Dani García x DOMURA</div>
+              <div class="order-date">28 diciembre 2023</div>
+            </div>
+          </div>
+          <div class="order-persons">20 comensales</div>
+          <div class="order-price">2600€</div>
+          <div><span class="order-status-badge badge-completed">Entregado</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BENEFICIOS CLUB -->
+    <section class="profile-section reveal-on-scroll" id="beneficios">
+      <div class="section-header">
+        <h2 class="section-title">Tus beneficios</h2>
+      </div>
+      <div class="benefits-grid">
+        <div class="benefit-card">
+          <div class="benefit-ico">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25"/></svg>
+          </div>
+          <div class="benefit-title">Envíos premium</div>
+          <div class="benefit-desc">Envío gratuito en temperatura controlada en todos tus pedidos</div>
+          <div class="benefit-value">Ilimitados</div>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-ico">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M9 14.25l6-6m4.5-3.493V21.75l-3.75-1.5-3.75 1.5-3.75-1.5-3.75 1.5V4.757c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0c1.1.128 1.907 1.077 1.907 2.185z"/></svg>
+          </div>
+          <div class="benefit-title">Descuento Club</div>
+          <div class="benefit-desc">Reducción permanente en todas las experiencias del catálogo</div>
+          <div class="benefit-value">−15%</div>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-ico">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>
+          </div>
+          <div class="benefit-title">Acceso anticipado</div>
+          <div class="benefit-desc">48h de acceso prioritario a lanzamientos Limited antes que nadie</div>
+          <div class="benefit-value">48h antes</div>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-ico">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z"/></svg>
+          </div>
+          <div class="benefit-title">Línea prioritaria</div>
+          <div class="benefit-desc">Atención dedicada con tiempo de respuesta garantizado</div>
+          <div class="benefit-value">&lt; 2h respuesta</div>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-ico">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 01-.825-.242m9.345-8.334a2.126 2.126 0 00-.476-.095 48.64 48.64 0 00-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0011.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155"/></svg>
+          </div>
+          <div class="benefit-title">Eventos & Catas</div>
+          <div class="benefit-desc">Invitaciones a experiencias presenciales y catas exclusivas</div>
+          <div class="benefit-value">4 al año</div>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-ico">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18"/></svg>
+          </div>
+          <div class="benefit-title">Sorpresas de temporada</div>
+          <div class="benefit-desc">Regalos curados seleccionados por nuestro equipo en fechas especiales</div>
+          <div class="benefit-value">Incluido</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAVORITOS -->
+    <section class="profile-section reveal-on-scroll" id="favoritos">
+      <div class="section-header">
+        <h2 class="section-title">Guardados</h2>
+        <a href="test.html" class="section-link">Explorar catálogo →</a>
+      </div>
+      <div class="wishlist-grid">
+        <div class="wish-card">
+          <div class="wish-img">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>
+          </div>
+          <div class="wish-body">
+            <div class="wish-tier">Limited</div>
+            <div class="wish-name">Delicias del mar</div>
+            <div class="wish-price">Desde 250€ · 2 pers.</div>
+          </div>
+        </div>
+        <div class="wish-card">
+          <div class="wish-img">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75"/></svg>
+          </div>
+          <div class="wish-body">
+            <div class="wish-tier">Signature</div>
+            <div class="wish-name">Ribera del Duero</div>
+            <div class="wish-price">Desde 165€ · 2 pers.</div>
+          </div>
+        </div>
+        <div class="wish-card">
+          <div class="wish-img">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"/></svg>
+          </div>
+          <div class="wish-body">
+            <div class="wish-tier">Curated</div>
+            <div class="wish-name">Cava</div>
+            <div class="wish-price">Desde 90€ · 2 pers.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- AJUSTES -->
+    <section class="profile-section reveal-on-scroll" id="ajustes">
+      <div class="section-header">
+        <h2 class="section-title">Ajustes de cuenta</h2>
+      </div>
+      <div class="settings-grid" style="margin-bottom:24px;">
+        <div class="settings-card">
+          <div class="settings-label">Nombre completo</div>
+          <div class="settings-value">Alejandra García Moreno</div>
+          <a href="#" class="btn-settings-edit">Editar →</a>
+        </div>
+        <div class="settings-card">
+          <div class="settings-label">Correo electrónico</div>
+          <div class="settings-value">alejandra@gmail.com</div>
+          <a href="#" class="btn-settings-edit">Editar →</a>
+        </div>
+        <div class="settings-card">
+          <div class="settings-label">Dirección de envío</div>
+          <div class="settings-value">Calle Alcalá 124, 28009 Madrid</div>
+          <a href="#" class="btn-settings-edit">Editar →</a>
+        </div>
+        <div class="settings-card">
+          <div class="settings-label">Contraseña</div>
+          <div class="settings-value">••••••••••••</div>
+          <a href="#" class="btn-settings-edit">Cambiar →</a>
+        </div>
+      </div>
+
+      <div class="settings-card" style="border-radius:16px;">
+        <div class="settings-label" style="margin-bottom:6px;">Notificaciones</div>
+        <div class="notification-row">
+          <div class="notification-label">Actualizaciones de pedidos</div>
+          <button class="toggle on" onclick="this.classList.toggle('on')"></button>
+        </div>
+        <div class="notification-row">
+          <div class="notification-label">Nuevas experiencias disponibles</div>
+          <button class="toggle on" onclick="this.classList.toggle('on')"></button>
+        </div>
+        <div class="notification-row">
+          <div class="notification-label">Ofertas exclusivas para miembros</div>
+          <button class="toggle" onclick="this.classList.toggle('on')"></button>
+        </div>
+        <div class="notification-row">
+          <div class="notification-label">Invitaciones a eventos</div>
+          <button class="toggle on" onclick="this.classList.toggle('on')"></button>
+        </div>
+        <div class="notification-row">
+          <div class="notification-label">Newsletter mensual</div>
+          <button class="toggle" onclick="this.classList.toggle('on')"></button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- FOOTER -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-left"><h2 class="footer-logo"><img src="assets/logoblanco.png" alt="Logo Domura"></h2></div>
+    <div class="footer-links">
+      <div class="footer-col"><h4>Síguenos</h4><a href="#">Instagram</a><a href="#">Facebook</a></div>
+      <div class="footer-col"><h4>Experiencias</h4><a href="essential.html">Essential</a><a href="curated.html">Curated</a><a href="signature.html">Signature</a><a href="limited.html">Limited</a></div>
+      <div class="footer-col"><h4>Información</h4><a href="firma.html">Firma</a><a href="faq.html">FAQ</a><a href="envio.html">Envío</a><a href="contacto.html">Contacto</a></div>
+      <div class="footer-col"><h4>Legal</h4><a href="aviso-legal.html">Aviso legal</a><a href="privacidad.html">Privacidad</a><a href="terminos.html">Términos</a></div>
+    </div>
+  </div>
+</footer>
+
+<!-- CHATBOT FLOTANTE -->
+<button class="chatbot-toggle" id="chatbotToggle" aria-label="Abrir asistente">
+  <svg class="ico-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+    <path d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 01-.825-.242m9.345-8.334a2.126 2.126 0 00-.476-.095 48.64 48.64 0 00-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0011.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155"/>
+  </svg>
+  <svg class="ico-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+    <path d="M6 18L18 6M6 6l12 12"/>
+  </svg>
+</button>
+
+<div class="chatbot-window" id="chatbotWindow">
+  <div class="chatbot-header">
+    <div class="chatbot-avatar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>
+    </div>
+    <div>
+      <div class="chatbot-name">Asistente Domura</div>
+      <div class="chatbot-status"><span class="chatbot-status-dot"></span> En línea</div>
+    </div>
+  </div>
+
+  <div class="chatbot-messages" id="chatMessages">
+    <div class="msg bot">
+      <div class="msg-bubble">¡Hola, Alejandra! 👋 Soy tu asistente personal en Domura. ¿En qué puedo ayudarte hoy?</div>
+      <div class="msg-time">Ahora</div>
+    </div>
+  </div>
+
+  <div class="chatbot-suggestions" id="chatSuggestions">
+    <button class="suggestion-chip" data-msg="¿Cuándo llega mi pedido?">¿Cuándo llega mi pedido?</button>
+    <button class="suggestion-chip" data-msg="¿Qué incluye el Club Anual?">Beneficios del Club</button>
+    <button class="suggestion-chip" data-msg="Quiero cambiar mi dirección">Cambiar dirección</button>
+    <button class="suggestion-chip" data-msg="¿Cómo cancelo un pedido?">Cancelar pedido</button>
+    <button class="suggestion-chip" data-msg="¿Qué experiencias hay disponibles?">Ver experiencias</button>
+  </div>
+
+  <div class="chatbot-input-area">
+    <input type="text" class="chatbot-input" id="chatInput" placeholder="Escribe tu consulta..." maxlength="200">
+    <button class="chatbot-send" id="chatSend">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>
+    </button>
+  </div>
+</div>
+
+<script>
+  // ── LOADER ──────────────────────────────
+  const loaderEl = document.getElementById('loader');
+  const progressText = document.getElementById('loaderProgress');
+  let progress = 0;
+  const interval = setInterval(() => {
+    progress += Math.floor(Math.random() * 6) + 2;
+    if (progress >= 100) {
+      progress = 100;
+      clearInterval(interval);
+      progressText.textContent = '100%';
+      setTimeout(() => {
+        loaderEl.classList.add('hidden');
+        document.body.classList.add('loaded');
+      }, 400);
+    } else {
+      progressText.textContent = progress + '%';
+    }
+  }, 30);
+
+  // ── CURSOR ──────────────────────────────
+  const dot = document.querySelector('.cursor-dot');
+  const ring = document.querySelector('.cursor-ring');
+  const isFine = matchMedia('(pointer: fine)').matches;
+
+  if (isFine && dot && ring) {
+    let mx = 0, my = 0, rx = 0, ry = 0;
+    document.addEventListener('mousemove', e => {
+      mx = e.clientX; my = e.clientY;
+      dot.style.left = mx + 'px'; dot.style.top = my + 'px';
+    });
+    (function animRing() {
+      rx += (mx - rx) * 0.15; ry += (my - ry) * 0.15;
+      ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
+      requestAnimationFrame(animRing);
+    })();
+    document.querySelectorAll('a,button,.wish-card,.tracking-card,.settings-card,.benefit-card,.plan-card').forEach(el => {
+      el.addEventListener('mouseenter', () => document.body.classList.add('hover-active'));
+      el.addEventListener('mouseleave', () => document.body.classList.remove('hover-active'));
+    });
+  } else {
+    if (dot) dot.style.display = 'none';
+    if (ring) ring.style.display = 'none';
+  }
+
+  // ── MENÚ HAMBURGUESA ────────────────────
+  const menuToggle = document.getElementById('menuToggle');
+  const navMenu = document.getElementById('navMenu');
+  if (menuToggle && navMenu) {
+    menuToggle.addEventListener('click', e => {
+      e.stopPropagation();
+      const open = document.body.classList.toggle('menu-open');
+      menuToggle.classList.toggle('active', open);
+    });
+    navMenu.querySelectorAll('a').forEach(l => l.addEventListener('click', () => {
+      document.body.classList.remove('menu-open');
+      menuToggle.classList.remove('active');
+    }));
+    document.addEventListener('click', e => {
+      if (!navMenu.contains(e.target) && !menuToggle.contains(e.target)) {
+        document.body.classList.remove('menu-open');
+        menuToggle.classList.remove('active');
+      }
+    });
+  }
+
+  // ── SCROLL REVEAL ───────────────────────
+  const revealObs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('is-visible'); });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal-on-scroll').forEach(el => revealObs.observe(el));
+
+  // ── SIDEBAR ACTIVE LINK ─────────────────
+  const sidebarLinks = document.querySelectorAll('.sidebar-link[href^="#"]');
+  const sections = document.querySelectorAll('section[id]');
+  const headerH = 100;
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(sec => {
+      if (window.scrollY >= sec.offsetTop - headerH - 60) current = sec.id;
+    });
+    sidebarLinks.forEach(l => {
+      l.classList.toggle('active', l.getAttribute('href') === '#' + current);
+    });
+  }, { passive: true });
+
+  // ── CHATBOT ─────────────────────────────
+  const chatToggleBtn = document.getElementById('chatbotToggle');
+  const chatWindow = document.getElementById('chatbotWindow');
+  const chatMessages = document.getElementById('chatMessages');
+  const chatInput = document.getElementById('chatInput');
+  const chatSend = document.getElementById('chatSend');
+  const chatSuggestions = document.getElementById('chatSuggestions');
+
+  let chatOpen = false;
+
+  chatToggleBtn.addEventListener('click', () => {
+    chatOpen = !chatOpen;
+    document.body.classList.toggle('chatbot-open', chatOpen);
+  });
+
+  // Respuestas predefinidas
+  const botReplies = {
+    'pedido': 'Tu pedido más reciente (#DOM-2024-0471) está en tránsito y llegará mañana entre las 10:00 y las 14:00. ¿Necesitas más detalles?',
+    'llega': 'Tu próxima entrega está prevista para mañana, 24 de mayo, en el tramo horario de 10:00–14:00. El transportista te enviará un SMS cuando esté cerca.',
+    'club': 'Como miembro del Club Anual disfrutas de: envío premium gratis, 15% de descuento en todo el catálogo, acceso anticipado a colecciones Limited (48h antes), línea prioritaria con respuesta en menos de 2h e invitaciones a 4 eventos exclusivos al año.',
+    'anual': 'El plan Anual cuesta 179€/año (equivale a 14,92€/mes). Incluye todos los beneficios premium. ¡Ya lo tienes activo!',
+    'mensual': 'El plan Mensual cuesta 17€/mes sin permanencia. Puedes cambiar o cancelar cuando quieras desde la sección Club.',
+    'dirección': 'Para cambiar tu dirección de envío ve a Ajustes → Dirección de envío y pulsa "Editar". Los cambios se aplican a partir del siguiente pedido.',
+    'cancelar': 'Puedes cancelar un pedido dentro de las primeras 2 horas tras realizarlo. Escríbenos a hola@domura.es o llámanos al 900 XXX XXX y lo gestionamos de inmediato.',
+    'experiencias': 'Actualmente tenemos disponibles experiencias de las colecciones Essential, Curated, Signature y Limited. Puedes explorar el catálogo completo en la sección Experiencias.',
+    'envío': 'Todos los envíos se realizan en temperatura controlada con mensajería premium. Como miembro del Club el envío es siempre gratuito.',
+    'precio': 'Los precios varían según la experiencia y el número de comensales. Essential desde 49€, Curated desde 99€, Signature desde 180€ y Limited desde 350€.',
+    'factura': 'Tus facturas están disponibles en la sección Pedidos. Pulsa sobre cualquier pedido para descargar el PDF de factura.',
+    'regalo': 'Puedes regalar cualquier experiencia a través de la página de la experiencia pulsando "Regalar". Llegará con un packaging especial y una tarjeta personalizada.',
+    'default': 'Entendido. Para consultas más específicas puedes contactar con nuestro equipo en hola@domura.es o llamarnos al 900 XXX XXX (L-V, 9:00–18:00). Estamos encantados de ayudarte.'
+  };
+
+  function getBotReply(text) {
+    const t = text.toLowerCase();
+    for (const [key, reply] of Object.entries(botReplies)) {
+      if (key !== 'default' && t.includes(key)) return reply;
+    }
+    return botReplies.default;
+  }
+
+  function addMessage(text, sender) {
+    const now = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+    const div = document.createElement('div');
+    div.className = `msg ${sender}`;
+    div.innerHTML = `<div class="msg-bubble">${text}</div><div class="msg-time">${now}</div>`;
+    chatMessages.appendChild(div);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  function showTyping() {
+    const div = document.createElement('div');
+    div.className = 'msg bot typing-msg';
+    div.innerHTML = `<div class="msg-bubble"><div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>`;
+    chatMessages.appendChild(div);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    return div;
+  }
+
+  function sendMessage(text) {
+    if (!text.trim()) return;
+    addMessage(text, 'user');
+    chatInput.value = '';
+    chatSuggestions.style.display = 'none';
+
+    const typing = showTyping();
+    setTimeout(() => {
+      chatMessages.removeChild(typing);
+      addMessage(getBotReply(text), 'bot');
+    }, 900 + Math.random() * 600);
+  }
+
+  chatSend.addEventListener('click', () => sendMessage(chatInput.value));
+  chatInput.addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(chatInput.value); });
+
+  document.querySelectorAll('.suggestion-chip').forEach(chip => {
+    chip.addEventListener('click', () => sendMessage(chip.getAttribute('data-msg')));
+  });
+
+  // Transición de salida efecto telón
+  window.addEventListener('load', () => {
+    const transitionScreen = document.querySelector('.page-transition');
+    if (transitionScreen) {
+      transitionScreen.classList.add('hidden');
+      setTimeout(() => {
+        transitionScreen.style.display = 'none';
+      }, 600);
+    }
+  });
+</script>
+</body>
+</html>
