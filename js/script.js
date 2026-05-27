@@ -508,11 +508,30 @@ if (popupOv) {
 }
 
 // ==========================================================================
-// CARRITO: BADGE, ADD-TO-CART Y CARGA DE DATOS
+// CARRITO: FUNCIONES BASE (ARRAY MULTI-ITEM)
 // ==========================================================================
+function getCart() {
+  const raw = localStorage.getItem('domura_cart');
+  if (!raw) return [];
+  const parsed = JSON.parse(raw);
+  return Array.isArray(parsed) ? parsed : [parsed];
+}
+
+function saveCart(cart) {
+  localStorage.setItem('domura_cart', JSON.stringify(cart));
+}
+
+function parsePrice(str) {
+  return parseFloat(String(str).replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+}
+
+function formatPrice(num) {
+  return num.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '€';
+}
+
 function updateCartBadge() {
-  const cart  = JSON.parse(localStorage.getItem('domura_cart') || 'null');
-  const count = cart ? (cart.quantity || 1) : 0;
+  const cart  = getCart();
+  const count = cart.reduce((s, i) => s + (i.quantity || 1), 0);
   document.querySelectorAll('.cart-badge, .nav-badge').forEach(badge => {
     if (count > 0) {
       badge.textContent = count > 9 ? '9+' : String(count);
@@ -534,7 +553,7 @@ document.querySelectorAll('a[href="carrito.html"].icon-btn').forEach(btn => {
 });
 updateCartBadge();
 
-// "Añadir al carrito" en páginas de experiencia
+// "Añadir al carrito" en páginas de experiencia -> guarda y redirige
 const btnCart = document.querySelector('.btn-cart');
 if (btnCart) {
   btnCart.addEventListener('click', () => {
@@ -555,47 +574,113 @@ if (btnCart) {
     const imgEl    = document.querySelector('.exp-main-img img.active') || document.querySelector('.exp-main-img img');
     const imagen   = imgEl?.getAttribute('src') || '';
 
-    const prev     = JSON.parse(localStorage.getItem('domura_cart') || 'null');
-    const isSame   = prev && prev.titulo === titulo && prev.personas === personas;
-    const quantity = isSame ? (prev.quantity || 1) + 1 : 1;
-
-    localStorage.setItem('domura_cart', JSON.stringify({ titulo, personas, precio, imagen, quantity }));
+    const cart = getCart();
+    const idx  = cart.findIndex(i => i.titulo === titulo && i.personas === personas);
+    if (idx >= 0) {
+      cart[idx].quantity = (cart[idx].quantity || 1) + 1;
+    } else {
+      cart.push({ titulo, personas, precio, imagen, quantity: 1 });
+    }
+    saveCart(cart);
     updateCartBadge();
 
-    const orig = btnCart.textContent;
-    btnCart.textContent = '✓ Añadido al carrito';
-    btnCart.style.cssText = 'background:#fff;color:#000;border-color:#fff;';
-    setTimeout(() => { btnCart.textContent = orig; btnCart.style.cssText = ''; }, 2200);
+    // Redirect to cart immediately
+    window.location.href = 'carrito.html';
   });
 }
 
-// Página carrito: poblar step-1 desde localStorage
-const cartPage = document.querySelector('.checkout-page');
-if (cartPage) {
-  const cart = JSON.parse(localStorage.getItem('domura_cart') || 'null');
-  if (cart) {
-    const imgEl   = cartPage.querySelector('.cart-img');
-    const titleEl = cartPage.querySelector('.cart-item-title');
-    const subEl   = cartPage.querySelector('.cart-item-subtitle');
-    const qtyEl   = cartPage.querySelector('.cart-qty');
-    if (imgEl)   imgEl.setAttribute('src', cart.imagen);
-    if (titleEl) titleEl.textContent = cart.titulo;
-    if (subEl)   subEl.textContent   = cart.personas + ' persona' + (cart.personas !== '1' ? 's' : '');
-    if (qtyEl)   qtyEl.textContent   = cart.quantity || 1;
-    cartPage.querySelectorAll('.cart-price').forEach(el => el.textContent = cart.precio);
-    cartPage.querySelectorAll('.summary-block').forEach(block => {
-      block.querySelectorAll('.summary-line').forEach(line => {
-        const spans = line.querySelectorAll('span');
-        if (spans.length === 2 && (spans[0].textContent.trim() === 'Subtotal' || spans[0].textContent.trim() === 'Total')) {
-          spans[1].textContent = cart.precio;
-        }
-      });
-    });
+// ==========================================================================
+// CARRITO: PAGINA - RENDERIZAR ITEMS CON +/-
+// ==========================================================================
+function renderCartPage() {
+  const container = document.getElementById('cart-items-container');
+  if (!container) return;
+
+  const cart = getCart();
+  container.innerHTML = '';
+
+  if (cart.length === 0) {
+    container.innerHTML = '<p class="cart-empty">Tu carrito está vacío.</p>';
+    updateCartSummary(0);
+    const btnNext = document.querySelector('#step-1 .btn-checkout');
+    if (btnNext) btnNext.disabled = true;
+    return;
   }
+
+  const btnNext = document.querySelector('#step-1 .btn-checkout');
+  if (btnNext) btnNext.disabled = false;
+
+  cart.forEach((item, idx) => {
+    const row = document.createElement('div');
+    row.className = 'cart-item-row';
+    const pluralP   = item.personas !== '1' ? 's' : '';
+    const lineTotal = parsePrice(item.precio) * (item.quantity || 1);
+
+    row.innerHTML = `
+      <img src="${item.imagen}" alt="${item.titulo}" class="cart-img">
+      <div class="cart-details">
+        <h3 class="cart-item-title">${item.titulo}</h3>
+        <p class="cart-item-subtitle">${item.personas} persona${pluralP}</p>
+      </div>
+      <div class="cart-meta">
+        <div class="cart-qty-ctrl">
+          <button class="qty-btn qty-minus" data-idx="${idx}">−</button>
+          <span class="cart-qty">${item.quantity || 1}</span>
+          <button class="qty-btn qty-plus" data-idx="${idx}">+</button>
+        </div>
+        <div class="cart-price">${formatPrice(lineTotal)}</div>
+      </div>
+    `;
+    container.appendChild(row);
+  });
+
+  container.querySelectorAll('.qty-minus').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const i = parseInt(btn.dataset.idx);
+      const c = getCart();
+      if (!c[i]) return;
+      c[i].quantity = (c[i].quantity || 1) - 1;
+      if (c[i].quantity <= 0) c.splice(i, 1);
+      saveCart(c);
+      updateCartBadge();
+      renderCartPage();
+    });
+  });
+
+  container.querySelectorAll('.qty-plus').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const i = parseInt(btn.dataset.idx);
+      const c = getCart();
+      if (!c[i]) return;
+      c[i].quantity = (c[i].quantity || 1) + 1;
+      saveCart(c);
+      updateCartBadge();
+      renderCartPage();
+    });
+  });
+
+  const subtotal = cart.reduce((s, item) => s + parsePrice(item.precio) * (item.quantity || 1), 0);
+  updateCartSummary(subtotal);
 }
 
+function updateCartSummary(subtotal) {
+  const cartPage = document.querySelector('.checkout-page');
+  if (!cartPage) return;
+  cartPage.querySelectorAll('.summary-block .summary-line').forEach(line => {
+    const spans = line.querySelectorAll('span');
+    if (spans.length === 2) {
+      const label = spans[0].textContent.trim();
+      if (label === 'Subtotal' || label === 'Total') {
+        spans[1].textContent = formatPrice(subtotal);
+      }
+    }
+  });
+}
+
+if (document.querySelector('.checkout-page')) renderCartPage();
+
 // ==========================================================================
-// CARRITO: NAVEGACIÓN ENTRE PASOS
+// CARRITO: NAVEGACION ENTRE PASOS
 // ==========================================================================
 window.navigateNext = function(stepNum) {
   if (stepNum === 3) {
@@ -605,19 +690,25 @@ window.navigateNext = function(stepNum) {
     if (hora)  localStorage.setItem('domura_hora',  hora);
   }
   if (stepNum === 4) {
-    const cart  = JSON.parse(localStorage.getItem('domura_cart') || 'null');
+    const cart  = getCart();
     const fecha = localStorage.getItem('domura_fecha') || document.getElementById('fecha')?.value || '';
     const hora  = localStorage.getItem('domura_hora')  || document.getElementById('hora')?.value  || '';
     const panel = document.querySelector('.success-details');
     if (panel) {
-      const titulo   = cart?.titulo   || 'Tu experiencia';
-      const personas = cart?.personas || '';
       const fechaStr = fecha
         ? new Date(fecha + 'T12:00:00').toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })
         : '—';
       const horaStr = hora || '—';
-      const persStr = personas ? ` para ${personas} persona${personas !== '1' ? 's' : ''}` : '';
-      panel.innerHTML = `${titulo}${persStr} el<br>día <strong>${fechaStr}</strong> a las <strong>${horaStr}h</strong>.`;
+      if (cart.length === 1) {
+        const item = cart[0];
+        const persStr = item.personas ? ` para ${item.personas} persona${item.personas !== '1' ? 's' : ''}` : '';
+        panel.innerHTML = `${item.titulo}${persStr} el<br>día <strong>${fechaStr}</strong> a las <strong>${horaStr}h</strong>.`;
+      } else if (cart.length > 1) {
+        const lines = cart.map(i => `${i.titulo} ×${i.quantity || 1}`).join(', ');
+        panel.innerHTML = `${lines}<br>el día <strong>${fechaStr}</strong> a las <strong>${horaStr}h</strong>.`;
+      } else {
+        panel.innerHTML = `Pedido el<br>día <strong>${fechaStr}</strong> a las <strong>${horaStr}h</strong>.`;
+      }
     }
     localStorage.removeItem('domura_cart');
     localStorage.removeItem('domura_fecha');
@@ -631,8 +722,7 @@ window.navigateNext = function(stepNum) {
   if (content) content.classList.add('active');
   if (label)   label.classList.add('active');
   window.scrollTo({ top: 0, behavior: 'smooth' });
-};
-
+}
 // ==========================================================================
 // TEST DE EXPERIENCIAS: QUIZ
 // ==========================================================================
@@ -806,36 +896,29 @@ window.navigateNext = function(stepNum) {
 })();
 
 // ==========================================================================
-// CABECERA MÓVIL: ICONOS DE PERFIL Y CARRITO EN MENÚ
+// CABECERA MOVIL: PERFIL Y CARRITO COMO TEXTO EN EL MENU
 // ==========================================================================
 document.addEventListener('DOMContentLoaded', () => {
   const navMenu = document.querySelector('.nav-menu');
   if (navMenu) {
-    const div = document.createElement('div');
-    div.className = 'nav-mobile-icons';
-    div.innerHTML = `
-      <a href="perfil.html" class="nav-mobile-icon-btn">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
-        <span>Perfil</span>
-      </a>
-      <a href="carrito.html" class="nav-mobile-icon-btn">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007z"/></svg>
-        <span class="nav-badge" id="nav-cart-badge"></span>
-        <span>Carrito</span>
-      </a>
-    `;
-    navMenu.appendChild(div);
-    div.querySelectorAll('a').forEach(link => {
-      link.addEventListener('click', () => {
+    [
+      { href: 'perfil.html',  label: 'Perfil',   badge: false },
+      { href: 'carrito.html', label: 'Carrito',  badge: true  }
+    ].forEach(({ href, label, badge }) => {
+      const a = document.createElement('a');
+      a.href = href;
+      a.className = 'nav-link nav-mobile-extra';
+      a.setAttribute('data-text', label);
+      a.innerHTML = `<span>${label}</span>${badge ? '<span class="nav-badge"></span>' : ''}`;
+      navMenu.appendChild(a);
+      a.addEventListener('click', () => {
         document.body.classList.remove('menu-open');
         document.querySelector('.menu-toggle')?.classList.remove('active');
       });
     });
-    // Sync badge state
     updateCartBadge();
   }
-});
-
+})
 // ==========================================================================
 // SISTEMA DE COOKIES
 // ==========================================================================

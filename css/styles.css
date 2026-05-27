@@ -168,8 +168,9 @@ body.menu-open {
     display: flex !important;
     flex-direction: column;
     justify-content: center;
-    align-items: center;
-    gap: 2.5rem;
+    align-items: flex-start;
+    padding-left: 8%;
+    gap: 1.6rem;
     z-index: 100002;
     opacity: 0;
     visibility: hidden;
@@ -213,8 +214,8 @@ body.loaded .reveal-btn { animation: revealUp 1.4s cubic-bezier(0.16, 1, 0.3, 1)
 .slider-container { position: sticky; top: 0; left: 0; width: 100vw; height: 100vh; overflow: hidden; }
 .bg-slide { position: absolute; bottom: 0; left: 0; width: 100%; height: 0; background-size: cover; background-position: center; }
 .bg-slide:first-child { height: 100% !important; }
-.text-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.7) 100%); z-index: 2; }
-.slider-layout { position: absolute; top: 50%; left: 0; width: 100%; transform: translateY(-50%); z-index: 3; display: flex; flex-direction: column; }
+.text-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.7) 100%); z-index: 4; }
+.slider-layout { position: absolute; top: 50%; left: 0; width: 100%; transform: translateY(-50%); z-index: 5; display: flex; flex-direction: column; }
 .text-zone { position: relative; width: 100%; padding-left: 8%; max-width: 850px; }
 .zone-top { margin-bottom: 25px; height: 35px; }
 .zone-bottom { margin-top: 45px; height: 160px; }
@@ -733,9 +734,11 @@ body:not(.header-hidden) .main-header {
   /* El menú ya está definido arriba; aquí sólo refinamos los links */
   .nav-link {
     font-size: 1.5rem !important;
+    font-weight: 700 !important;
     font-family: 'Satoshi', sans-serif;
     text-transform: none;
     letter-spacing: 1px;
+    color: #fff !important;
   }
 
   /* 3. Ajustes de Escala Tipográfica General */
@@ -797,6 +800,15 @@ body:not(.header-hidden) .main-header {
 
   /* 9. Quiz section padding */
   .quiz-section { padding: 100px 24px 60px; }
+
+  /* 10. Slider: reducir tamaño de texto en móvil */
+  .zone-bottom h2 { font-size: 1.55rem; line-height: 1.35; }
+  .zone-bottom { height: 130px; }
+
+  /* 11. Reviews: más espacio entre foto y texto */
+  .reviews-visual-side { flex: 0 0 38vh; height: 38vh; }
+  .reviews-content-side { padding-top: 36px; padding-bottom: 30px; }
+  .reviews-subtitle { margin-bottom: 20px; }
 }
 
 /* ══════════════════════════════════════════
@@ -2442,34 +2454,18 @@ body {
 }
 
 /* ==========================================================================
-   CABECERA MÓVIL: ICONOS DE PERFIL Y CARRITO EN MENÚ
+   CABECERA MÓVIL: PERFIL Y CARRITO COMO TEXTO EN EL MENÚ
    ========================================================================== */
-.nav-mobile-icons {
-  display: none;
-  gap: 48px;
-  padding-top: 10px;
-}
-.nav-mobile-icon-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  color: rgba(255,255,255,0.55);
-  text-decoration: none;
-  font-size: 0.65rem;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  font-family: 'Satoshi', sans-serif;
-  font-weight: 500;
-  transition: color 0.3s;
+/* Ocultar en desktop (el nav-menu es horizontal, estos son extra) */
+.nav-mobile-extra {
+  display: none !important;
   position: relative;
 }
-.nav-mobile-icon-btn svg { width: 26px; height: 26px; }
-.nav-mobile-icon-btn:hover { color: #fff; }
-.nav-mobile-icon-btn .nav-badge {
+/* Badge flotante junto al enlace de carrito en el menú móvil */
+.nav-mobile-extra .nav-badge {
   position: absolute;
-  top: -3px;
-  right: calc(50% - 22px);
+  top: 0;
+  right: -16px;
   background: #fff;
   color: #000;
   border-radius: 50%;
@@ -2477,6 +2473,7 @@ body {
   height: 13px;
   font-size: 8px;
   font-weight: 700;
+  font-family: 'Satoshi', sans-serif;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2485,13 +2482,12 @@ body {
   transition: opacity 0.25s, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
   pointer-events: none;
 }
-.nav-mobile-icon-btn .nav-badge.has-items {
+.nav-mobile-extra .nav-badge.has-items {
   opacity: 1;
   transform: scale(1);
 }
-
 @media (max-width: 768px) {
-  .nav-mobile-icons { display: flex; }
+  .nav-mobile-extra { display: inline-block !important; }
 }
 
 /* ==========================================================================
