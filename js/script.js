@@ -505,6 +505,31 @@ if (popupOv) {
 
   popupOv.addEventListener('click', e => { if (e.target === e.currentTarget) closePopup(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closePopup(); });
+
+  // "Añadir al carrito" del popup → guarda grupo personalizado y redirige
+  const popupCtaBtn = popupOv.querySelector('.popup-cta-btn');
+  if (popupCtaBtn) {
+    popupCtaBtn.addEventListener('click', () => {
+      const n       = Math.max(1, parseInt(document.getElementById('nPers').value) || 4);
+      const titulo  = document.querySelector('.exp-title')?.textContent.trim()
+                   || document.title.replace(' — Domura', '').replace(' - Domura', '').trim();
+      const imgEl   = document.querySelector('.exp-main-img img.active') || document.querySelector('.exp-main-img img');
+      const imagen  = imgEl?.getAttribute('src') || '';
+      const precio  = (n * PPP).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '€';
+      const personas = String(n);
+
+      const cart = getCart();
+      const idx  = cart.findIndex(i => i.titulo === titulo && i.personas === personas);
+      if (idx >= 0) {
+        cart[idx].quantity = (cart[idx].quantity || 1) + 1;
+      } else {
+        cart.push({ titulo, personas, precio, imagen, quantity: 1 });
+      }
+      saveCart(cart);
+      updateCartBadge();
+      window.location.href = 'carrito.html';
+    });
+  }
 }
 
 // ==========================================================================

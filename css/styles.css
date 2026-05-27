@@ -801,8 +801,10 @@ body:not(.header-hidden) .main-header {
   /* 9. Quiz section padding */
   .quiz-section { padding: 100px 24px 60px; }
 
-  /* 10. Slider: reducir tamaño de texto en móvil */
-  .zone-bottom h2 { font-size: 1.55rem; line-height: 1.35; }
+  /* 10. Slider: reducir tamaño de texto y añadir márgenes en móvil */
+  .text-slide { left: 5%; right: 5%; }
+  .zone-bottom h2 { font-size: 1.4rem; line-height: 1.35; }
+  .step-label { font-size: 1.1rem; }
   .zone-bottom { height: 130px; }
 
   /* 11. Reviews: más espacio entre foto y texto */
@@ -2456,9 +2458,11 @@ body {
 /* ==========================================================================
    CABECERA MÓVIL: PERFIL Y CARRITO COMO TEXTO EN EL MENÚ
    ========================================================================== */
-/* Ocultar en desktop (el nav-menu es horizontal, estos son extra) */
+/* Ocultar en escritorio — los links extra del menú hamburguesa solo son para móvil */
+@media (min-width: 769px) {
+  .nav-mobile-extra { display: none !important; }
+}
 .nav-mobile-extra {
-  display: none !important;
   position: relative;
 }
 /* Badge flotante junto al enlace de carrito en el menú móvil */
@@ -2485,9 +2489,6 @@ body {
 .nav-mobile-extra .nav-badge.has-items {
   opacity: 1;
   transform: scale(1);
-}
-@media (max-width: 768px) {
-  .nav-mobile-extra { display: inline-block !important; }
 }
 
 /* ==========================================================================
