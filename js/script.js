@@ -481,65 +481,83 @@ document.querySelectorAll('.cc-btn:not(.plus-btn)').forEach(btn => {
 // Popup 4+ comensales — precio leído de la primera opción de .cc-price
 const popupOv = document.getElementById('popupOv');
 if (popupOv) {
-  const firstCcPrice = document.querySelector('.cc-btn:not(.plus-btn) .cc-price');
-  const PPP = firstCcPrice
-    ? parseFloat(firstCcPrice.textContent.replace(',', '.').replace('€', '').trim())
+  const firstCcPriceEl = document.querySelector('.cc-btn:not(.plus-btn) .cc-price');
+  const PPP = firstCcPriceEl
+    ? parseFloat(firstCcPriceEl.textContent.replace(',', '.').replace(/[^\d.]/g, ''))
     : 0;
 
-  function openPopup() {
+  window.openPopup = function() {
     document.getElementById('nPers').value = 4;
-    calcPrice();
+    window.calcPrice();
     popupOv.classList.add('open');
-  }
-  function closePopup() { popupOv.classList.remove('open'); }
-  function calcPrice() {
+  };
+  window.closePopup = function() { popupOv.classList.remove('open'); };
+  window.calcPrice  = function() {
     const n = Math.max(1, parseInt(document.getElementById('nPers').value) || 4);
     const priceEl = document.getElementById('popupPrice');
     if (priceEl) priceEl.textContent = (n * PPP).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+  };
+
+  popupOv.addEventListener('click', e => { if (e.target === e.currentTarget) window.closePopup(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') window.closePopup(); });
+}
+
+// ==========================================================================
+// addPopupToCart — declaración global hoisted (llamada desde onclick en HTML)
+// ==========================================================================
+function addPopupToCart() {
+  const priceEl = document.querySelector('.cc-btn.selected:not(.plus-btn) .cc-price')
+               || document.querySelector('.cc-btn:not(.plus-btn) .cc-price');
+  const ppp     = priceEl
+    ? parseFloat(priceEl.textContent.replace(',', '.').replace(/[^\d.]/g, ''))
+    : 0;
+  const nEl     = document.getElementById('nPers');
+  const n       = Math.max(1, parseInt(nEl ? nEl.value : '4') || 4);
+  const titleEl = document.querySelector('.exp-title');
+  const titulo  = titleEl
+    ? titleEl.textContent.trim()
+    : (document.title.split(/\s*[-—]\s*/)[1] || document.title).trim();
+  const imgEl   = document.querySelector('.exp-main-img img.active') || document.querySelector('.exp-main-img img');
+  const imagen  = imgEl ? (imgEl.getAttribute('src') || '') : '';
+  const precio  = (n * ppp).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '€';
+  const personas = String(n);
+  const cart = getCart();
+  const idx  = cart.findIndex(i => i && i.titulo === titulo && i.personas === personas);
+  if (idx >= 0) {
+    cart[idx].quantity = (cart[idx].quantity || 1) + 1;
+  } else {
+    cart.push({ titulo, personas, precio, imagen, quantity: 1 });
   }
+  saveCart(cart);
+  updateCartBadge();
+  window.location.href = 'carrito.html';
+}
 
-  // Exponer globalmente para los onclick="openPopup()" del HTML
-  window.openPopup  = openPopup;
-  window.closePopup = closePopup;
-  window.calcPrice  = calcPrice;
-
-  popupOv.addEventListener('click', e => { if (e.target === e.currentTarget) closePopup(); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closePopup(); });
-
-  // "Añadir al carrito" del popup → guarda grupo personalizado y redirige
-  const popupCtaBtn = popupOv.querySelector('.popup-cta-btn');
-  if (popupCtaBtn) {
-    popupCtaBtn.addEventListener('click', () => {
-      const n       = Math.max(1, parseInt(document.getElementById('nPers').value) || 4);
-      const titulo  = document.querySelector('.exp-title')?.textContent.trim()
-                   || document.title.replace(' — Domura', '').replace(' - Domura', '').trim();
-      const imgEl   = document.querySelector('.exp-main-img img.active') || document.querySelector('.exp-main-img img');
-      const imagen  = imgEl?.getAttribute('src') || '';
-      const precio  = (n * PPP).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '€';
-      const personas = String(n);
-
-      const cart = getCart();
-      const idx  = cart.findIndex(i => i.titulo === titulo && i.personas === personas);
-      if (idx >= 0) {
-        cart[idx].quantity = (cart[idx].quantity || 1) + 1;
-      } else {
-        cart.push({ titulo, personas, precio, imagen, quantity: 1 });
-      }
-      saveCart(cart);
-      updateCartBadge();
-      window.location.href = 'carrito.html';
-    });
-  }
+// ==========================================================================
+// startQuiz — declaración global hoisted (llamada desde onclick en HTML)
+// ==========================================================================
+function startQuiz() {
+  const pre  = document.getElementById('phase-pre-test');
+  const flow = document.getElementById('phase-quiz-flow');
+  const res  = document.getElementById('phase-result');
+  if (!pre || !flow) return;
+  [pre, flow, res].forEach(function(p) { if (p) p.classList.remove('active'); });
+  flow.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // ==========================================================================
 // CARRITO: FUNCIONES BASE (ARRAY MULTI-ITEM)
 // ==========================================================================
 function getCart() {
-  const raw = localStorage.getItem('domura_cart');
-  if (!raw) return [];
-  const parsed = JSON.parse(raw);
-  return Array.isArray(parsed) ? parsed : [parsed];
+  try {
+    const raw = localStorage.getItem('domura_cart');
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [parsed];
+  } catch (e) {
+    return [];
+  }
 }
 
 function saveCart(cart) {
@@ -707,7 +725,7 @@ if (document.querySelector('.checkout-page')) renderCartPage();
 // ==========================================================================
 // CARRITO: NAVEGACION ENTRE PASOS
 // ==========================================================================
-window.navigateNext = function(stepNum) {
+function navigateNext(stepNum) {
   if (stepNum === 3) {
     const fecha = document.getElementById('fecha')?.value || '';
     const hora  = document.getElementById('hora')?.value  || '';
@@ -921,29 +939,9 @@ window.navigateNext = function(stepNum) {
 })();
 
 // ==========================================================================
-// CABECERA MOVIL: PERFIL Y CARRITO COMO TEXTO EN EL MENU
+// CABECERA MÓVIL: PERFIL Y CARRITO ESTÁN EN EL HTML DE CADA PÁGINA
+// El badge del carrito se actualiza con updateCartBadge() ya llamado arriba.
 // ==========================================================================
-document.addEventListener('DOMContentLoaded', () => {
-  const navMenu = document.querySelector('.nav-menu');
-  if (navMenu) {
-    [
-      { href: 'perfil.html',  label: 'Perfil',   badge: false },
-      { href: 'carrito.html', label: 'Carrito',  badge: true  }
-    ].forEach(({ href, label, badge }) => {
-      const a = document.createElement('a');
-      a.href = href;
-      a.className = 'nav-link nav-mobile-extra';
-      a.setAttribute('data-text', label);
-      a.innerHTML = `<span>${label}</span>${badge ? '<span class="nav-badge"></span>' : ''}`;
-      navMenu.appendChild(a);
-      a.addEventListener('click', () => {
-        document.body.classList.remove('menu-open');
-        document.querySelector('.menu-toggle')?.classList.remove('active');
-      });
-    });
-    updateCartBadge();
-  }
-})
 // ==========================================================================
 // SISTEMA DE COOKIES
 // ==========================================================================
