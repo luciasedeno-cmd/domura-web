@@ -7,8 +7,6 @@
   <link href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,700&f[]=boska@300,400,500,700,400i&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-
-  </style>
 </head>
 <body class="loading">
 
@@ -188,87 +186,6 @@
   </div>
 </div>
 
-<script>
-
-  const PPP = 45.0;
-  const isFP = matchMedia('(pointer: fine)').matches;
-
-  // Transition + header scroll
-  window.addEventListener('load', () => {
-    const t = document.querySelector('.page-transition');
-    if (t) { t.classList.add('hidden'); setTimeout(() => t.style.display = 'none', 600); }
-    document.body.classList.remove('loading');
-    document.body.classList.add('loaded');
-  });
-  window.addEventListener('scroll', () => {
-    document.querySelector('.main-header').classList.toggle('scrolled', scrollY > 40);
-  });
-
-  // Cursor
-  const dot = document.querySelector('.cursor-dot'), ring = document.querySelector('.cursor-ring');
-  if (isFP && dot && ring) {
-    let mx = 0, my = 0, rx = 0, ry = 0;
-    document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; dot.style.left = mx + 'px'; dot.style.top = my + 'px'; });
-    (function loop() { rx += (mx - rx) * .15; ry += (my - ry) * .15; ring.style.left = rx + 'px'; ring.style.top = ry + 'px'; requestAnimationFrame(loop); })();
-    document.body.addEventListener('mouseenter', e => { if (e.target?.closest?.('a,button,.exp-thumb,.gal-hit')) document.body.classList.add('hov'); }, true);
-    document.body.addEventListener('mouseleave', e => { if (e.target?.closest?.('a,button,.exp-thumb,.gal-hit')) document.body.classList.remove('hov'); }, true);
-  } else { if (dot) dot.style.display = 'none'; if (ring) ring.style.display = 'none'; }
-
-  // Menu hamburguesa
-  document.addEventListener('DOMContentLoaded', () => {
-    const toggle = document.querySelector('.menu-toggle'), nav = document.querySelector('.nav-menu');
-    if (toggle && nav) {
-      toggle.addEventListener('click', e => { e.stopPropagation(); const o = document.body.classList.toggle('menu-open'); toggle.classList.toggle('active', o); });
-      nav.querySelectorAll('a').forEach(l => l.addEventListener('click', () => { document.body.classList.remove('menu-open'); toggle.classList.remove('active'); }));
-      document.addEventListener('click', e => { if (!nav.contains(e.target) && !toggle.contains(e.target)) { document.body.classList.remove('menu-open'); toggle.classList.remove('active'); } });
-    }
-  });
-
-  // Scroll reveal
-  const ro = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) e.target.classList.add('vis'); }), { threshold: 0.1 });
-  document.querySelectorAll('.reveal').forEach(el => ro.observe(el));
-
-  // Galería principal
-  const imgs = document.querySelectorAll('.exp-main-img img');
-  const thumbs = document.querySelectorAll('.exp-thumb');
-  let curImg = 0;
-  function goImg(i) {
-    imgs[curImg].classList.remove('active'); thumbs[curImg].classList.remove('active');
-    curImg = (i + imgs.length) % imgs.length;
-    imgs[curImg].classList.add('active'); thumbs[curImg].classList.add('active');
-  }
-  thumbs.forEach((t, i) => t.addEventListener('click', () => goImg(i)));
-  document.querySelector('.gal-hit.left')?.addEventListener('click', () => goImg(curImg - 1));
-  document.querySelector('.gal-hit.right')?.addEventListener('click', () => goImg(curImg + 1));
-  // Touch swipe en galería
-  let sx = 0;
-  document.querySelector('.exp-main-img')?.addEventListener('touchstart', e => { sx = e.changedTouches[0].screenX; }, { passive: true });
-  document.querySelector('.exp-main-img')?.addEventListener('touchend', e => { const d = sx - e.changedTouches[0].screenX; if (Math.abs(d) > 50) goImg(curImg + (d > 0 ? 1 : -1)); }, { passive: true });
-  // Auto
-  setInterval(() => goImg(curImg + 1), 5000);
-
-  // Selector comensales — ninguno preseleccionado
-  document.querySelectorAll('.cc-btn:not(.plus-btn)').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.cc-btn').forEach(b => b.classList.remove('selected'));
-      btn.classList.add('selected');
-    });
-  });
-
-  // Popup 4+
-  function openPopup() {
-    document.getElementById('nPers').value = 4;
-    calcPrice();
-    document.getElementById('popupOv').classList.add('open');
-  }
-  function closePopup() { document.getElementById('popupOv').classList.remove('open'); }
-  function calcPrice() {
-    const n = Math.max(1, parseInt(document.getElementById('nPers').value) || 4);
-    document.getElementById('popupPrice').textContent = (n * PPP).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
-  }
-  document.getElementById('popupOv').addEventListener('click', e => { if (e.target === e.currentTarget) closePopup(); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closePopup(); });
-
-</script>
+<script src="js/script.js"></script>
 </body>
 </html>
